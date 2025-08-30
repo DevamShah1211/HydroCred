@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Send, RefreshCw } from 'lucide-react';
-import { getWalletAddress, getOwnedTokens, transferCredit, isTokenRetired, handleChainError } from '../lib/chain';
+import { getWalletAddress, getOwnedTokens, transferCredit, isTokenRetired, handleChainError, getAvailableWallets } from '../lib/chain';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import DemoBanner from '../components/DemoBanner';
 
 interface CreditToken {
   tokenId: number;
@@ -133,6 +134,8 @@ const Producer: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
+          <DemoBanner />
+          
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
@@ -226,14 +229,33 @@ const Producer: React.FC = () => {
                     <label className="block text-sm font-medium mb-2">
                       Recipient Address
                     </label>
-                    <input
-                      type="text"
-                      value={transferAddress}
-                      onChange={(e) => setTransferAddress(e.target.value)}
-                      placeholder="0x..."
-                      className="input w-full"
-                      required
-                    />
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={transferAddress}
+                        onChange={(e) => setTransferAddress(e.target.value)}
+                        placeholder="0x..."
+                        className="input w-full"
+                        required
+                      />
+                      
+                      {/* Quick address selector for demo */}
+                      <div className="flex flex-wrap gap-2">
+                        {getAvailableWallets()
+                          .filter(w => w.address !== walletAddress)
+                          .map((wallet) => (
+                          <button
+                            key={wallet.address}
+                            type="button"
+                            onClick={() => setTransferAddress(wallet.address)}
+                            className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors"
+                            title={wallet.name}
+                          >
+                            {wallet.name.split(' ')[0]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <button

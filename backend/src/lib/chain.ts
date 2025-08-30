@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { config } from '../config/env';
 import HydroCredTokenABI from '../abi/HydroCredToken.json';
+import { getCreditEvents as getMockCreditEvents } from './mockChain';
 
 let provider: ethers.JsonRpcProvider | null = null;
 let contract: ethers.Contract | null = null;
@@ -40,6 +41,13 @@ export interface CreditEvent {
 }
 
 export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEvent[]> {
+  // Check if we should use mock data
+  const useMockChain = process.env.USE_MOCK_CHAIN !== 'false';
+  
+  if (useMockChain) {
+    return await getMockCreditEvents(fromBlock);
+  }
+  
   const contractInstance = getContract();
   if (!contractInstance) {
     throw new Error('Contract not initialized');

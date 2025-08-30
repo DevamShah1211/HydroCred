@@ -4,6 +4,7 @@ import { Users, Trash2, Download, RefreshCw } from 'lucide-react';
 import { getWalletAddress, getOwnedTokens, retireCredit, isTokenRetired, handleChainError } from '../lib/chain';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import DemoBanner from '../components/DemoBanner';
 
 interface CreditToken {
   tokenId: number;
@@ -150,6 +151,8 @@ const Buyer: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
+          <DemoBanner />
+          
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">

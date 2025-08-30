@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NavBar from './components/NavBar';
 import { ToastContainer } from './components/Toast';
+import DemoInstructions from './components/DemoInstructions';
 import Home from './pages/Home';
 import Certifier from './pages/Certifier';
 import Producer from './pages/Producer';
@@ -29,6 +30,7 @@ function App() {
       </motion.main>
       
       <ToastContainer />
+      <DemoInstructions />
     </div>
   );
 }
