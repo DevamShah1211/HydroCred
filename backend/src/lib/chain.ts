@@ -13,7 +13,7 @@ export function getProvider() {
 }
 
 export function getContract() {
-  if (!contract && config.contractAddress) {
+  if (!contract && config.contractAddress && config.contractAddress !== '0x0000000000000000000000000000000000000000') {
     const providerInstance = getProvider();
     if (providerInstance) {
       contract = new ethers.Contract(
@@ -42,7 +42,7 @@ export interface CreditEvent {
 export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEvent[]> {
   const contractInstance = getContract();
   if (!contractInstance) {
-    throw new Error('Contract not initialized');
+    throw new Error('Smart contract not configured or deployed. Please set CONTRACT_ADDRESS in your environment variables.');
   }
 
   const events: CreditEvent[] = [];
@@ -116,14 +116,17 @@ export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEven
     return events;
   } catch (error) {
     console.error('Error fetching credit events:', error);
-    throw error;
+    if (error instanceof Error && error.message.includes('not configured')) {
+      throw error;
+    }
+    throw new Error('Failed to fetch blockchain events. Please check your RPC configuration and contract address.');
   }
 }
 
 export async function getTokenOwner(tokenId: number): Promise<string> {
   const contractInstance = getContract();
   if (!contractInstance) {
-    throw new Error('Contract not initialized');
+    throw new Error('Smart contract not configured or deployed. Please set CONTRACT_ADDRESS in your environment variables.');
   }
   
   try {
@@ -136,7 +139,7 @@ export async function getTokenOwner(tokenId: number): Promise<string> {
 export async function isTokenRetired(tokenId: number): Promise<boolean> {
   const contractInstance = getContract();
   if (!contractInstance) {
-    throw new Error('Contract not initialized');
+    throw new Error('Smart contract not configured or deployed. Please set CONTRACT_ADDRESS in your environment variables.');
   }
   
   return await contractInstance.isRetired(tokenId);

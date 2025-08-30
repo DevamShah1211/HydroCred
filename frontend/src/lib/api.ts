@@ -79,11 +79,28 @@ api.interceptors.response.use(
     if (error.response?.status === 404) {
       throw new Error('API endpoint not found');
     } else if (error.response?.status >= 500) {
-      throw new Error('Server error - please try again later');
-    } else if (error.code === 'ECONNREFUSED') {
-      throw new Error('Cannot connect to backend server');
+      throw new Error('Backend server error - please check if the backend is running');
+    } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+      throw new Error('Cannot connect to backend server. Please ensure the backend is running on port 5055.');
+    } else if (error.code === 'ERR_NETWORK') {
+      throw new Error('Network error - please check your connection and try again');
     }
     
     throw error;
+  }
+);
+
+// Add request interceptor for better error handling
+api.interceptors.request.use(
+  (config) => {
+    // Log API requests in development
+    if (import.meta.env.DEV) {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    }
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
   }
 );

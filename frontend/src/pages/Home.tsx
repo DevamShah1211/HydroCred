@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Shield, Users, Leaf, BarChart3 } from 'lucide-react';
+import ConfigStatus from '../components/ConfigStatus';
 
 const Home: React.FC = () => {
   const roles = [
@@ -60,6 +61,16 @@ const Home: React.FC = () => {
                 Blockchain-powered green hydrogen credit system with immutable audit trails.
                 Issue, transfer, and retire verified hydrogen production credits.
               </p>
+            </motion.div>
+
+            {/* Configuration Status */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mb-8 max-w-2xl mx-auto"
+            >
+              <ConfigStatus />
             </motion.div>
 
             <motion.div

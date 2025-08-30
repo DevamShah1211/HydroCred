@@ -41,11 +41,25 @@ const upload = multer({
 
 // Health check endpoint
 router.get('/health', (req: Request, res: Response) => {
-  res.json({ 
+  const config = require('../config/env').config;
+  
+  const status = {
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    service: 'HydroCred Backend API'
-  });
+    service: 'HydroCred Backend API',
+    environment: config.nodeEnv,
+    configuration: {
+      rpcUrl: config.rpcUrl ? 'configured' : 'missing',
+      contractAddress: config.contractAddress && config.contractAddress !== '0x0000000000000000000000000000000000000000' ? 'configured' : 'missing',
+      port: config.port
+    },
+    blockchain: {
+      connected: !!config.rpcUrl,
+      contractDeployed: !!(config.contractAddress && config.contractAddress !== '0x0000000000000000000000000000000000000000')
+    }
+  };
+  
+  res.json(status);
 });
 
 // File upload endpoint

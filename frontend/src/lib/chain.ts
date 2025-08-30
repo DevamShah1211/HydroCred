@@ -45,8 +45,8 @@ export async function getContract(): Promise<ethers.Contract> {
 }
 
 export async function getReadOnlyContract(): Promise<ethers.Contract> {
-  if (!CONTRACT_ADDRESS) {
-    throw new Error('Contract address not configured. Please deploy the contract first.');
+  if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
+    throw new Error('Smart contract not deployed yet. Please deploy the contract first or check your configuration.');
   }
   const providerInstance = await getProvider();
   return new ethers.Contract(CONTRACT_ADDRESS, HydroCredTokenABI, providerInstance);
@@ -88,9 +88,16 @@ export async function retireCredit(tokenId: number): Promise<ethers.ContractTran
 }
 
 export async function getOwnedTokens(address: string): Promise<number[]> {
-  const contractInstance = await getReadOnlyContract();
-  const tokens = await contractInstance.tokensOfOwner(address);
-  return tokens.map((token: bigint) => Number(token));
+  try {
+    const contractInstance = await getReadOnlyContract();
+    const tokens = await contractInstance.tokensOfOwner(address);
+    return tokens.map((token: bigint) => Number(token));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('not deployed')) {
+      throw new Error('Smart contract not deployed yet. Please deploy the contract first.');
+    }
+    throw error;
+  }
 }
 
 export async function isTokenRetired(tokenId: number): Promise<boolean> {
@@ -109,9 +116,16 @@ export async function hasRole(role: string, address: string): Promise<boolean> {
 }
 
 export async function isCertifier(address: string): Promise<boolean> {
-  const contractInstance = await getReadOnlyContract();
-  const certifierRole = await contractInstance.CERTIFIER_ROLE();
-  return await contractInstance.hasRole(certifierRole, address);
+  try {
+    const contractInstance = await getReadOnlyContract();
+    const certifierRole = await contractInstance.CERTIFIER_ROLE();
+    return await contractInstance.hasRole(certifierRole, address);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('not deployed')) {
+      throw new Error('Smart contract not deployed yet. Please deploy the contract first.');
+    }
+    throw error;
+  }
 }
 
 export function formatTokenId(tokenId: number): string {
