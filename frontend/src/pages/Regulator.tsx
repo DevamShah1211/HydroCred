@@ -22,7 +22,13 @@ const Regulator: React.FC = () => {
       setEvents(data.events);
     } catch (error) {
       console.error('Failed to load ledger data:', error);
-      toast.error('Failed to load blockchain data');
+      if (error instanceof Error && error.message.includes('Server error')) {
+        toast.warning('Backend server is not connected to blockchain. Please check configuration.');
+      } else if (error instanceof Error && error.message.includes('Cannot connect to backend')) {
+        toast.error('Cannot connect to backend server. Please ensure it is running.');
+      } else {
+        toast.error('Failed to load blockchain data');
+      }
     } finally {
       setIsLoading(false);
     }

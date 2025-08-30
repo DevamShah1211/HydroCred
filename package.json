@@ -11,6 +11,8 @@
   "scripts": {
     "install:all": "npm -w blockchain i && npm -w backend i && npm -w frontend i",
     "dev": "concurrently -k \"npm -w backend run dev\" \"npm -w frontend run dev\"",
+    "setup": "node scripts/setup.js",
+    "start-dev": "./scripts/start-dev.sh",
     "chain:compile": "npm -w blockchain run compile",
     "chain:test": "npm -w blockchain run test",
     "chain:deploy": "npm -w blockchain run deploy",

@@ -9,6 +9,7 @@ declare global {
 
 export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '';
 export const RPC_URL = import.meta.env.VITE_RPC_URL || '';
+export const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || import.meta.env.DEV;
 
 let provider: ethers.BrowserProvider | null = null;
 let signer: ethers.JsonRpcSigner | null = null;
@@ -50,6 +51,14 @@ export async function getReadOnlyContract(): Promise<ethers.Contract> {
   }
   const providerInstance = await getProvider();
   return new ethers.Contract(CONTRACT_ADDRESS, HydroCredTokenABI, providerInstance);
+}
+
+export function isContractConfigured(): boolean {
+  return Boolean(CONTRACT_ADDRESS && CONTRACT_ADDRESS.trim() !== '' && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000');
+}
+
+export function isDevelopmentMode(): boolean {
+  return DEV_MODE || CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000';
 }
 
 export async function connectWallet(): Promise<string> {

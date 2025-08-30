@@ -6,14 +6,14 @@ let provider: ethers.JsonRpcProvider | null = null;
 let contract: ethers.Contract | null = null;
 
 export function getProvider() {
-  if (!provider && config.rpcUrl) {
+  if (!provider && config.rpcUrl && config.rpcUrl !== 'https://sepolia.infura.io/v3/demo') {
     provider = new ethers.JsonRpcProvider(config.rpcUrl);
   }
   return provider;
 }
 
 export function getContract() {
-  if (!contract && config.contractAddress) {
+  if (!contract && config.contractAddress && config.contractAddress !== '0x0000000000000000000000000000000000000000') {
     const providerInstance = getProvider();
     if (providerInstance) {
       contract = new ethers.Contract(
@@ -24,6 +24,15 @@ export function getContract() {
     }
   }
   return contract;
+}
+
+export function isConfigured(): boolean {
+  return Boolean(
+    config.contractAddress && 
+    config.contractAddress !== '0x0000000000000000000000000000000000000000' &&
+    config.rpcUrl && 
+    config.rpcUrl !== 'https://sepolia.infura.io/v3/demo'
+  );
 }
 
 export interface CreditEvent {
@@ -40,9 +49,13 @@ export interface CreditEvent {
 }
 
 export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEvent[]> {
+  if (!isConfigured()) {
+    throw new Error('Blockchain not configured - please deploy contract and set environment variables');
+  }
+
   const contractInstance = getContract();
   if (!contractInstance) {
-    throw new Error('Contract not initialized');
+    throw new Error('Contract not initialized - please check CONTRACT_ADDRESS and RPC_URL configuration');
   }
 
   const events: CreditEvent[] = [];

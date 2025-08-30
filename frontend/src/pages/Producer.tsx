@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Send, RefreshCw } from 'lucide-react';
-import { getWalletAddress, getOwnedTokens, transferCredit, isTokenRetired, handleChainError } from '../lib/chain';
+import { getWalletAddress, getOwnedTokens, transferCredit, isTokenRetired, handleChainError, isContractConfigured } from '../lib/chain';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -26,6 +26,13 @@ const Producer: React.FC = () => {
 
   const loadWalletAndCredits = async () => {
     try {
+      if (!isContractConfigured()) {
+        console.warn('Contract not configured yet');
+        toast.warning('Contract not deployed yet. Please deploy the contract first.');
+        setIsLoading(false);
+        return;
+      }
+
       const address = await getWalletAddress();
       setWalletAddress(address);
       
@@ -34,7 +41,11 @@ const Producer: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load wallet and credits:', error);
-      toast.error('Failed to connect to blockchain');
+      if (error instanceof Error && error.message.includes('Contract address not configured')) {
+        toast.warning('Contract not deployed yet. Please deploy the contract first.');
+      } else {
+        toast.error('Failed to connect to blockchain');
+      }
     } finally {
       setIsLoading(false);
     }
