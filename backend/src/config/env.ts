@@ -8,6 +8,9 @@ export const config = {
   port: process.env.PORT || 5055,
   rpcUrl: process.env.RPC_URL || '',
   contractAddress: process.env.CONTRACT_ADDRESS || '',
+  registryAddress: process.env.REGISTRY_ADDRESS || '',
+  roleManagerAddress: process.env.ROLE_MANAGER_ADDRESS || '',
+  marketplaceAddress: process.env.MARKETPLACE_ADDRESS || '',
   aesKey: process.env.AES_KEY || 'default_key_change_me_32_chars_min',
   nodeEnv: process.env.NODE_ENV || 'development',
 };

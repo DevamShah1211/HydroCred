@@ -13,6 +13,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  */
 contract HydroCredToken is ERC721, ERC721Enumerable, AccessControl, Pausable {
     bytes32 public constant CERTIFIER_ROLE = keccak256("CERTIFIER_ROLE");
+    bytes32 public constant REGISTRY_MINTER_ROLE = keccak256("REGISTRY_MINTER_ROLE");
     
     uint256 private _nextTokenId = 1;
     
@@ -36,24 +37,55 @@ contract HydroCredToken is ERC721, ERC721Enumerable, AccessControl, Pausable {
      * @param to Address to receive the credits
      * @param amount Number of credits to issue
      */
-    function batchIssue(address to, uint256 amount) 
-        public 
-        onlyRole(CERTIFIER_ROLE) 
-        whenNotPaused 
+    function batchIssue(address to, uint256 amount)
+        public
+        onlyRole(CERTIFIER_ROLE)
+        whenNotPaused
     {
         require(to != address(0), "Cannot issue to zero address");
+        require(to != msg.sender, "Cannot mint to self");
         require(amount > 0, "Amount must be greater than 0");
         require(amount <= 1000, "Cannot issue more than 1000 credits at once");
-        
+
         uint256 fromId = _nextTokenId;
         uint256 toId = _nextTokenId + amount - 1;
-        
+
         for (uint256 i = 0; i < amount; i++) {
             _safeMint(to, _nextTokenId);
             _nextTokenId++;
         }
-        
+
         emit CreditsIssued(to, amount, fromId, toId);
+    }
+
+    /**
+     * @dev Mint credits from CertificationRegistry after certification
+     */
+    function batchIssueFromRegistry(address to, uint256 amount)
+        external
+        onlyRole(REGISTRY_MINTER_ROLE)
+        whenNotPaused
+    {
+        require(to != address(0), "Cannot issue to zero address");
+        require(amount > 0 && amount <= 1000, "Invalid amount");
+
+        uint256 fromId = _nextTokenId;
+        uint256 toId = _nextTokenId + amount - 1;
+
+        for (uint256 i = 0; i < amount; i++) {
+            _safeMint(to, _nextTokenId);
+            _nextTokenId++;
+        }
+
+        emit CreditsIssued(to, amount, fromId, toId);
+    }
+
+    function grantMinter(address registry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(REGISTRY_MINTER_ROLE, registry);
+    }
+
+    function revokeMinter(address registry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(REGISTRY_MINTER_ROLE, registry);
     }
 
     /**
