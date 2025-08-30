@@ -1,25 +1,59 @@
 {
   "name": "hydrocred-blockchain",
   "version": "1.0.0",
-  "description": "HydroCred Smart Contracts",
+  "description": "HydroCred Smart Contracts - Blockchain-based Green Hydrogen Credit System",
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts --network sepolia",
+    "deploy": "hardhat run scripts/deploy.ts --network testnet",
     "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
-    "postcompile": "node scripts/copy-abi.js"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@types/node": "^20.10.0",
-    "hardhat": "^2.19.0",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.3.0"
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
+    "deploy:polygon": "hardhat run scripts/deploy.ts --network polygon",
+    "verify": "hardhat verify --network testnet",
+    "node": "hardhat node",
+    "clean": "hardhat clean",
+    "coverage": "hardhat coverage",
+    "lint": "solhint 'contracts/**/*.sol'",
+    "lint:fix": "solhint 'contracts/**/*.sol' --fix"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
-    "dotenv": "^16.3.0",
-    "ethers": "^6.8.0"
-  }
+    "@openzeppelin/contracts-upgradeable": "^5.0.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
+    "@nomicfoundation/hardhat-ethers": "^3.0.4",
+    "@nomicfoundation/hardhat-verify": "^2.0.1",
+    "@typechain/ethers-v6": "^0.4.3",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.10.5",
+    "chai": "^4.3.7",
+    "ethers": "^6.8.1",
+    "hardhat": "^2.19.1",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5",
+    "solhint": "^4.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "blockchain",
+    "solidity",
+    "hardhat",
+    "ethereum",
+    "polygon",
+    "hydrogen",
+    "credits",
+    "green-energy"
+  ],
+  "author": "HydroCred Team",
+  "license": "MIT"
 }
