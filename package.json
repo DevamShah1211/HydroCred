@@ -4,7 +4,7 @@
   "private": true,
   "description": "HydroCred - Blockchain-based Green Hydrogen Credit System",
   "workspaces": [
-    "blockchain",
+    "contracts",
     "backend",
     "frontend"
   ],
@@ -13,10 +13,10 @@
     "dev": "concurrently -k \"npm -w backend run dev\" \"npm -w frontend run dev\"",
     "demo": "npm -w frontend run dev",
     "demo:full": "concurrently -k \"npm -w backend run dev\" \"npm -w frontend run dev\"",
-    "chain:compile": "npm -w blockchain run compile",
-    "chain:test": "npm -w blockchain run test",
-    "chain:deploy": "npm -w blockchain run deploy",
-    "update-contract-address": "node scripts/update-contract-address.js"
+    "chain:compile": "npm -w contracts run compile",
+    "chain:deploy": "npm -w contracts run deploy:local",
+    "chain:export-abi": "npm -w contracts run export-abi",
+    "demo:wallets": "ts-node scripts/generate_demo_wallets.ts"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

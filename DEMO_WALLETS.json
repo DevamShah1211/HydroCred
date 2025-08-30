@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Country Admin",
+    "address": "0x5ACD59a2ff9a8657aB02Fe001923A0009c434095",
+    "privateKey": "0x8c56d608fc484a889fa1c1a80f05f1802420ac4a73e3e317a4291ebfec4a5bdf",
+    "mnemonic": "game virtual comfort donate year image rely people decorate borrow novel inch"
+  },
+  {
+    "name": "State Admin",
+    "address": "0xAa2D5bC4702F400e7D4800a5f9a3c2e740c8Be03",
+    "privateKey": "0x71476cb0bc75ea280469e03ae25b1a0343f70d15e2f691e3c30edb273e22e715",
+    "mnemonic": "master obvious luggage solar wink thought parent follow habit donor boat surge"
+  },
+  {
+    "name": "City Admin 1",
+    "address": "0xC35762bc36C66d3885fD31Cc93a188D2b7f9f234",
+    "privateKey": "0xb601403259ba4fca3dc38d239ee82c351fc32ff55944984c40c9b8abe9f4a14c",
+    "mnemonic": "front stumble correct coconut weasel plate estate dinner super physical echo tuition"
+  },
+  {
+    "name": "City Admin 2",
+    "address": "0x70cAE29570fd19d08609F0A67BE9588e370D476d",
+    "privateKey": "0x9988fdb93d5310cc9427dab376e9c48f17e6574d793f8decd8ecc941ef195b7d",
+    "mnemonic": "swarm crunch casual adjust enjoy slender delay rhythm unit vapor sausage wild"
+  },
+  {
+    "name": "Producer 1",
+    "address": "0xe564e45A98Fe08365E33180074687102eBeda87A",
+    "privateKey": "0xc796c000670a8c30dccf5aa02d45f7437e2236ff66ed13a1f4fa422b6e501f6f",
+    "mnemonic": "outside chronic cupboard shoulder nasty hurry invest light keen adapt rare engage"
+  },
+  {
+    "name": "Producer 2",
+    "address": "0xDD386A677BC95337540974970f0B88e9851b9192",
+    "privateKey": "0x1b18811993bb3646e051a6fa979e7c26af42bff1d24b42144826c84afd60b529",
+    "mnemonic": "demise curious point gasp hard retire blind select birth require outside similar"
+  },
+  {
+    "name": "Producer 3",
+    "address": "0x1ED6C742406AB6c7f308B1FD05FF4074D32F35f4",
+    "privateKey": "0x9ddc3027a25d9f2b9dd261dbd7aa9f6c7357a22708e863252d52e9f33919fbb0",
+    "mnemonic": "category dial fury that race vivid struggle throw hockey capable lobster now"
+  },
+  {
+    "name": "Buyer 1",
+    "address": "0xfB4Aa1aF2AA2b92A054B43b6093286014953Da13",
+    "privateKey": "0xf9e76c7f599130f08b727811e0b458eb62908872d84db69abbbe72562595b976",
+    "mnemonic": "useless tissue sunny alone blast rib alone pipe advance pistol under lake"
+  },
+  {
+    "name": "Buyer 2",
+    "address": "0x947B41025EBa5D50A3b4cD99A4aEAAa81aBeC60e",
+    "privateKey": "0xd7e5dbedf22e9cbfa6ddb79621df84c0b6226014fd27206aaf714f8f44f752f9",
+    "mnemonic": "wing decorate snack erode enlist crack skull holiday lyrics enlist yellow menu"
+  },
+  {
+    "name": "Auditor",
+    "address": "0x6FAf52E71E577346A56373737f58218297b9E87F",
+    "privateKey": "0x52f09cedcd3beafba5d08a2cb7073152d16402d8c78534a9650c01b5df5c3bf8",
+    "mnemonic": "letter arctic flat gap want snake brand mango original final path fiction"
+  }
+]
