@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Plus, ExternalLink } from 'lucide-react';
-import { batchIssueCredits, getWalletAddress, isCertifier, getExplorerUrl, handleChainError, isContractConfigured, isDevelopmentMode } from '../lib/chain';
-import { getLedgerData, CreditEvent } from '../lib/api';
+import { batchIssueCredits, getWalletAddress, isCertifier, getExplorerUrl, handleChainError, isContractConfigured, isDevelopmentMode } from '../lib/chainWrapper';
+import { getLedgerData, CreditEvent } from '../lib/apiWrapper';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SetupGuide from '../components/SetupGuide';
@@ -26,13 +26,6 @@ const Certifier: React.FC = () => {
 
   const checkCertifierStatus = async () => {
     try {
-      if (!isContractConfigured()) {
-        console.warn('Contract not configured yet');
-        setShowSetupGuide(true);
-        setIsLoading(false);
-        return;
-      }
-
       const address = await getWalletAddress();
       setWalletAddress(address);
       
@@ -42,11 +35,7 @@ const Certifier: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to check certifier status:', error);
-      if (error instanceof Error && error.message.includes('Contract address not configured')) {
-        toast.warning('Contract not deployed yet. Please deploy the contract first.');
-      } else {
-        toast.error('Failed to connect to blockchain');
-      }
+      toast.error('Failed to connect to blockchain');
     } finally {
       setIsLoading(false);
     }
@@ -54,21 +43,12 @@ const Certifier: React.FC = () => {
 
   const loadIssuedCredits = async () => {
     try {
-      if (!isContractConfigured()) {
-        console.warn('Contract not configured, skipping credit loading');
-        return;
-      }
-
       const data = await getLedgerData();
       const issued = data.events.filter(event => event.type === 'issued');
       setIssuedCredits(issued);
     } catch (error) {
       console.error('Failed to load issued credits:', error);
-      if (error instanceof Error && error.message.includes('Server error')) {
-        toast.warning('Backend server is not connected to blockchain. Please check configuration.');
-      } else {
-        toast.error('Failed to load credit history');
-      }
+      toast.error('Failed to load credit history');
     }
   };
 
@@ -157,9 +137,7 @@ const Certifier: React.FC = () => {
   }
 
   return (
-    <>
-      {showSetupGuide && <SetupGuide onClose={() => setShowSetupGuide(false)} />}
-      <div className="min-h-screen bg-gradient-dark py-8">
+    <div className="min-h-screen bg-gradient-dark py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -287,7 +265,6 @@ const Certifier: React.FC = () => {
         </motion.div>
       </div>
     </div>
-    </>
   );
 };
 

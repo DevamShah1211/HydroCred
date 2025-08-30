@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, ExternalLink, RefreshCw, Filter, Search } from 'lucide-react';
-import { getLedgerData, CreditEvent } from '../lib/api';
-import { getExplorerUrl } from '../lib/chain';
+import { getLedgerData, CreditEvent } from '../lib/apiWrapper';
+import { getExplorerUrl } from '../lib/chainWrapper';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -22,13 +22,7 @@ const Regulator: React.FC = () => {
       setEvents(data.events);
     } catch (error) {
       console.error('Failed to load ledger data:', error);
-      if (error instanceof Error && error.message.includes('Server error')) {
-        toast.warning('Backend server is not connected to blockchain. Please check configuration.');
-      } else if (error instanceof Error && error.message.includes('Cannot connect to backend')) {
-        toast.error('Cannot connect to backend server. Please ensure it is running.');
-      } else {
-        toast.error('Failed to load blockchain data');
-      }
+      toast.error('Failed to load blockchain data');
     } finally {
       setIsLoading(false);
     }

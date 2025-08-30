@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, ExternalLink, Terminal, Settings } from 'lucide-react';
-import { isContractConfigured, isDevelopmentMode } from '../lib/chain';
+import { isContractConfigured, isDevelopmentMode } from '../lib/chainWrapper';
 
 interface SetupGuideProps {
   onClose?: () => void;

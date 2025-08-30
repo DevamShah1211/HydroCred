@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Wallet, Menu, X } from 'lucide-react';
-import { connectWallet, getWalletAddress } from '../lib/chain';
+import { connectWallet, getWalletAddress } from '../lib/chainWrapper';
+import UserSwitcher from './UserSwitcher';
 
 const NavBar: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -76,6 +77,8 @@ const NavBar: React.FC = () => {
 
           {/* Wallet Connection */}
           <div className="flex items-center space-x-4">
+            <UserSwitcher />
+            
             {walletAddress ? (
               <div className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-xl">
                 <Wallet className="h-4 w-4 text-brand" />

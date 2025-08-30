@@ -2,6 +2,8 @@
 import { Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NavBar from './components/NavBar';
+import DemoBanner from './components/DemoBanner';
+import DemoControls from './components/DemoControls';
 import { ToastContainer } from './components/Toast';
 import Home from './pages/Home';
 import Certifier from './pages/Certifier';
@@ -12,6 +14,7 @@ import Regulator from './pages/Regulator';
 function App() {
   return (
     <div className="min-h-screen bg-brand-dark">
+      <DemoBanner />
       <NavBar />
       
       <motion.main
@@ -28,6 +31,7 @@ function App() {
         </Routes>
       </motion.main>
       
+      <DemoControls />
       <ToastContainer />
     </div>
   );
