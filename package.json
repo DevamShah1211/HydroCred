@@ -14,7 +14,8 @@
     "chain:compile": "npm -w blockchain run compile",
     "chain:test": "npm -w blockchain run test",
     "chain:deploy": "npm -w blockchain run deploy",
-    "update-contract-address": "node scripts/update-contract-address.js"
+    "update-contract-address": "node scripts/update-contract-address.js",
+    "test:mock": "node scripts/test-mock-blockchain.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

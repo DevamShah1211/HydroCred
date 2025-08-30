@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import HydroCredTokenABI from '../abi/HydroCredToken.json';
+import { mockWallet, mockEthereum, mockProvider, mockSigner, MOCK_ADDRESSES } from './mockWallet';
 
 declare global {
   interface Window {
@@ -10,11 +11,22 @@ declare global {
 export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '';
 export const RPC_URL = import.meta.env.VITE_RPC_URL || '';
 
+// Check if we should use mock blockchain (development mode)
+const USE_MOCK_BLOCKCHAIN = import.meta.env.DEV || import.meta.env.VITE_USE_MOCK_BLOCKCHAIN === 'true';
+
 let provider: ethers.BrowserProvider | null = null;
 let signer: ethers.JsonRpcSigner | null = null;
 let contract: ethers.Contract | null = null;
 
+// Mock contract for development
+let mockContract: any = null;
+
 export async function getProvider(): Promise<ethers.BrowserProvider> {
+  if (USE_MOCK_BLOCKCHAIN) {
+    // Return mock provider
+    return mockProvider as any;
+  }
+
   if (!provider) {
     if (!window.ethereum) {
       throw new Error('MetaMask not found. Please install MetaMask.');
@@ -25,6 +37,11 @@ export async function getProvider(): Promise<ethers.BrowserProvider> {
 }
 
 export async function getSigner(): Promise<ethers.JsonRpcSigner> {
+  if (USE_MOCK_BLOCKCHAIN) {
+    // Return mock signer
+    return mockSigner as any;
+  }
+
   if (!signer) {
     const providerInstance = await getProvider();
     await providerInstance.send('eth_requestAccounts', []);
@@ -34,6 +51,70 @@ export async function getSigner(): Promise<ethers.JsonRpcSigner> {
 }
 
 export async function getContract(): Promise<ethers.Contract> {
+  if (USE_MOCK_BLOCKCHAIN) {
+    // Return mock contract
+    if (!mockContract) {
+      mockContract = {
+        batchIssue: async (to: string, amount: number) => {
+          // Simulate transaction
+          const tx = await mockWallet.sendTransaction({
+            to: '0x0000000000000000000000000000000000000000',
+            data: '0x'
+          });
+          return {
+            ...tx,
+            wait: async () => mockWallet.waitForTransaction(tx.hash)
+          };
+        },
+        transferFrom: async (from: string, to: string, tokenId: number) => {
+          const tx = await mockWallet.sendTransaction({
+            to: '0x0000000000000000000000000000000000000000',
+            data: '0x'
+          });
+          return {
+            ...tx,
+            wait: async () => mockWallet.waitForTransaction(tx.hash)
+          };
+        },
+        retire: async (tokenId: number) => {
+          const tx = await mockWallet.sendTransaction({
+            to: '0x0000000000000000000000000000000000000000',
+            data: '0x'
+          });
+          return {
+            ...tx,
+            wait: async () => mockWallet.waitForTransaction(tx.hash)
+          };
+        },
+        tokensOfOwner: async (owner: string) => {
+          // Return mock token IDs
+          const count = Math.floor(Math.random() * 50) + 10;
+          return Array.from({ length: count }, (_, i) => BigInt(i + 1));
+        },
+        ownerOf: async (tokenId: number) => {
+          // Return mock owner
+          return mockWallet.getAddress() || MOCK_ADDRESSES.PRODUCER;
+        },
+        isRetired: async (tokenId: number) => {
+          // Return mock retirement status
+          return Math.random() > 0.8; // 20% chance of being retired
+        },
+        hasRole: async (role: string, address: string) => {
+          // Mock role checking
+          if (role === 'CERTIFIER_ROLE') {
+            return address === MOCK_ADDRESSES.CERTIFIER || address === mockWallet.getAddress();
+          }
+          if (role === 'DEFAULT_ADMIN_ROLE') {
+            return address === MOCK_ADDRESSES.CERTIFIER;
+          }
+          return false;
+        },
+        CERTIFIER_ROLE: async () => '0x0000000000000000000000000000000000000000000000000000000000000000'
+      };
+    }
+    return mockContract;
+  }
+
   if (!contract) {
     if (!CONTRACT_ADDRESS) {
       throw new Error('Contract address not configured. Please deploy the contract first.');
@@ -45,6 +126,11 @@ export async function getContract(): Promise<ethers.Contract> {
 }
 
 export async function getReadOnlyContract(): Promise<ethers.Contract> {
+  if (USE_MOCK_BLOCKCHAIN) {
+    // Return mock contract for read operations
+    return await getContract();
+  }
+
   if (!CONTRACT_ADDRESS) {
     throw new Error('Contract address not configured. Please deploy the contract first.');
   }
@@ -54,6 +140,11 @@ export async function getReadOnlyContract(): Promise<ethers.Contract> {
 
 export async function connectWallet(): Promise<string> {
   try {
+    if (USE_MOCK_BLOCKCHAIN) {
+      // Auto-connect to mock wallet
+      return mockWallet.getAddress() || MOCK_ADDRESSES.CERTIFIER;
+    }
+
     const signerInstance = await getSigner();
     return await signerInstance.getAddress();
   } catch (error) {
@@ -64,6 +155,10 @@ export async function connectWallet(): Promise<string> {
 
 export async function getWalletAddress(): Promise<string | null> {
   try {
+    if (USE_MOCK_BLOCKCHAIN) {
+      return mockWallet.getAddress();
+    }
+
     const providerInstance = await getProvider();
     const accounts = await providerInstance.listAccounts();
     return accounts.length > 0 ? accounts[0].address : null;
@@ -119,6 +214,11 @@ export function formatTokenId(tokenId: number): string {
 }
 
 export function getExplorerUrl(txHash: string): string {
+  if (USE_MOCK_BLOCKCHAIN) {
+    // Return mock explorer URL for development
+    return `#mock-transaction-${txHash}`;
+  }
+  
   // Default to Sepolia explorer
   return `https://sepolia.etherscan.io/tx/${txHash}`;
 }
@@ -143,3 +243,24 @@ export function handleChainError(error: any): ChainError {
   
   return new ChainError(error.message || 'Unknown blockchain error', 'UNKNOWN');
 }
+
+// Mock blockchain utilities for development
+export const MockBlockchain = {
+  // Get available mock addresses
+  getMockAddresses: () => MOCK_ADDRESSES,
+  
+  // Connect to mock wallet
+  connectMockWallet: (address: string) => mockWallet.connect(address),
+  
+  // Disconnect mock wallet
+  disconnectMockWallet: () => mockWallet.disconnect(),
+  
+  // Switch mock address
+  switchMockAddress: (address: string) => mockWallet.switchAddress(address),
+  
+  // Get current mock address
+  getCurrentMockAddress: () => mockWallet.getAddress(),
+  
+  // Check if mock wallet is connected
+  isMockWalletConnected: () => mockWallet.isConnected()
+};
