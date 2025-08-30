@@ -1,3 +1,87 @@
+HydroCred – Blockchain-based Green Hydrogen Credit System (MVP)
+
+Overview
+HydroCred tracks, certifies, trades, and retires green hydrogen credits (H2 tokens). Credits are ERC-20 style tokens representing 1 kg of certified green hydrogen. The system enforces a certification-first workflow and prevents admin self-minting. Wallet-based authentication is used end-to-end.
+
+Repository Layout
+- `contracts`: Hardhat project with smart contracts (token, registry, marketplace) and deploy scripts
+- `backend`: Node.js + Express + MongoDB API, wallet auth, auditor export
+- `frontend`: React + TailwindCSS + shadcn/UI + Framer Motion app
+
+Architecture Diagram (MVP)
+```
+Producer (Wallet) ---requests---> Backend(API) ---submit hash---> Registry(Contract)
+       ^                                           |
+       |<--mint event-- Token(ERC20)<--- certify --|--- City Admin (Wallet)
+
+Producer ---list credits---> Marketplace(Contract) <--- buy --- Buyer (Wallet)
+   |                                                              |
+   |------------------- on-chain events --------------------------|
+
+Auditor/Gov (read-only) --- /api/audit/export ---> CSV/JSON
+```
+
+Key Roles
+- Country Admin → appoints State Admins
+- State Admin → appoints City Admins
+- City Admin (Certifier) → certifies producer requests
+- Producer → submits production requests, lists credits
+- Buyer → purchases credits
+- Auditor/Government → view-only
+
+Security Constraints
+- Admins cannot mint tokens to themselves
+- Minting requires producer request + City Admin certification
+- Buyers can only purchase from certified producers (enforced by marketplace)
+- Double certification prevented via on-chain hash registry and DB
+
+Quick Start
+1) Contracts
+```
+cd contracts
+npm install
+cp .env.example .env  # configure RPC + PRIVATE_KEYS
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network polygonAmoy
+```
+
+2) Backend
+```
+cd backend
+npm install
+cp .env.example .env  # set MONGODB_URI, RPC_URL, CONTRACT_ADDRESSES, ADMIN_KEYS
+npm run dev
+```
+
+3) Frontend
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Demo Wallets
+Run the wallet generator and see output in the terminal and `demo_wallets.json`.
+```
+node scripts/generate-demo-wallets.js
+```
+These demo wallets (public/private keys) are for hackathon testing only. Do not use in production.
+
+Admin Hierarchy
+Admins assign roles on-chain via the Registry. Country Admin initializes and delegates to State Admins; State Admins delegate to City Admins.
+
+Auditor Export
+- Endpoint: `/api/audit/export` with optional `?format=csv` (default json)
+- Returns transaction history, certifications, and marketplace activity snapshot
+
+Commands
+- `contracts`: `npm test`, `npm run compile`, `npm run deploy:amoy`
+- `backend`: `npm run dev`, `npm start`
+- `frontend`: `npm run dev`, `npm run build`
+
+License
+MIT
+
 # HydroCred 🌊
 
 **Blockchain-powered Green Hydrogen Credit System**

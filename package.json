@@ -19,7 +19,8 @@
     "update-contract-address": "node scripts/update-contract-address.js"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "hardhat": "^2.26.3"
   },
   "engines": {
     "node": ">=18.0.0"

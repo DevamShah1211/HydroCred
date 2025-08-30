@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { z } from 'zod';
 import { getCreditEvents } from '../lib/chain';
+import { stringify } from 'csv-stringify/sync';
 import { encrypt, hash } from '../lib/crypto';
 
 const router = Router();
@@ -133,3 +134,44 @@ router.get('/token/:tokenId', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+// Auditor export endpoint
+router.get('/audit/export', async (req: Request, res: Response) => {
+  try {
+    const format = (req.query.format as string) || 'json';
+    const events = await getCreditEvents(0);
+    const summary = {
+      generatedAt: new Date().toISOString(),
+      totalEvents: events.length,
+      counts: {
+        issued: events.filter(e => e.type === 'issued').length,
+        transferred: events.filter(e => e.type === 'transferred').length,
+        retired: events.filter(e => e.type === 'retired').length,
+      },
+    };
+
+    if (format === 'csv') {
+      const records = events.map(e => ({
+        type: e.type,
+        tokenId: e.tokenId ?? '',
+        from: e.from ?? '',
+        to: e.to ?? '',
+        amount: e.amount ?? '',
+        fromId: e.fromId ?? '',
+        toId: e.toId ?? '',
+        timestamp: e.timestamp,
+        blockNumber: e.blockNumber,
+        transactionHash: e.transactionHash,
+      }));
+      const csv = stringify(records, { header: true });
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="hydrocred_audit.csv"');
+      return res.status(200).send(csv);
+    }
+
+    return res.json({ summary, events });
+  } catch (err) {
+    console.error('Audit export error:', err);
+    res.status(500).json({ error: 'Failed to export audit data' });
+  }
+});
