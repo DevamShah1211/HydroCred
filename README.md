@@ -1,178 +1,403 @@
-# HydroCred 🌊
+# HydroCred - Blockchain Green Hydrogen Credit System
 
-**Blockchain-powered Green Hydrogen Credit System**
+![HydroCred Logo](https://via.placeholder.com/800x200/0ea5e9/ffffff?text=HydroCred+-+Blockchain+Green+Hydrogen+Credit+System)
 
-HydroCred is a decentralized application (DApp) for issuing, transferring, and retiring verified green hydrogen production credits on the blockchain. Built with immutable audit trails and role-based access control.
+## 🌿 Overview
 
-![HydroCred Logo](logo/hydrocred.svg)
+HydroCred is a comprehensive blockchain-based platform for tracking, certifying, and trading green hydrogen credits (H2 tokens). Built with security, transparency, and scalability in mind, it provides a complete ecosystem for the green hydrogen economy.
+
+### Key Features
+
+- 🔐 **Blockchain Security**: Immutable records on Ethereum/Polygon
+- ⚡ **Gasless Tokens**: ERC-20 compatible H2 credits representing 1 kg of certified green hydrogen
+- 👥 **Role-Based Access**: Hierarchical system with Country/State/City Admins, Producers, Buyers, and Auditors
+- 🏭 **Production Tracking**: Complete lifecycle from production request to credit minting
+- 🛒 **Marketplace**: Decentralized trading platform for H2 credits
+- 📊 **Analytics**: Comprehensive dashboards and reporting
+- 🔍 **Audit Trail**: Complete transaction history and compliance monitoring
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   Blockchain    │
+│   React + TS    │◄──►│  Node.js + API  │◄──►│ Smart Contracts │
+│   TailwindCSS   │    │   MongoDB       │    │   Hardhat       │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Tech Stack
+
+**Frontend:**
+- React 18 + TypeScript
+- TailwindCSS + shadcn/UI
+- Framer Motion (animations)
+- ethers.js (blockchain interaction)
+- React Query (state management)
+
+**Backend:**
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT Authentication
+- ethers.js + web3.js
+- Comprehensive API with rate limiting
+
+**Blockchain:**
+- Solidity smart contracts
+- Hardhat development environment
+- OpenZeppelin libraries
+- Support for local/testnet deployment
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Node.js 18+** and **npm**
-- **MetaMask** browser extension
-- **Ethereum testnet** (Sepolia) or **Polygon Amoy** access
+- Node.js 18+ and npm
+- MongoDB (local or cloud)
+- MetaMask browser extension
+- Git
 
 ### Installation
 
-1. **Clone and install dependencies:**
+1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd HydroCred
-   npm install
+   git clone https://github.com/your-org/hydrocred.git
+   cd hydrocred
    ```
 
-2. **Configure environment:**
+2. **Install dependencies**
    ```bash
-   cp env.example .env
-   # Edit .env with your RPC URL and private key
+   npm run setup
    ```
 
-3. **Compile and deploy contracts:**
+3. **Set up environment variables**
    ```bash
-   npm run chain:compile
-   npm run chain:deploy
+   # Backend
+   cp backend/.env.example backend/.env
+   
+   # Frontend
+   cp frontend/.env.example frontend/.env
+   
+   # Contracts
+   cp contracts/.env.example contracts/.env
    ```
 
-4. **Start the application:**
+4. **Start MongoDB**
+   ```bash
+   # Local MongoDB
+   mongod
+   
+   # Or use MongoDB Atlas (update connection string in backend/.env)
+   ```
+
+5. **Deploy smart contracts**
+   ```bash
+   npm run contracts:compile
+   npm run contracts:deploy
+   ```
+
+6. **Start the development servers**
    ```bash
    npm run dev
    ```
 
-5. **Access the app:**
-   - **Frontend:** http://localhost:5173
-   - **Backend API:** http://localhost:5055
+The application will be available at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000
+- Blockchain: http://localhost:8545
 
-## 🏗️ Architecture
+## 👥 User Roles & Hierarchy
+
+### Role Structure
 
 ```
-HydroCred/
-├── blockchain/          # Smart contracts (Hardhat)
-├── backend/            # Express API server  
-├── frontend/           # React + Vite app
-├── logo/              # Brand assets
-└── scripts/           # Automation scripts
+Country Admin
+    └── State Admin
+        └── City Admin (Certifier)
+            ├── Producers
+            └── Buyers
+    └── Auditors (Independent)
 ```
 
-## 🔐 Roles & Permissions
+### Role Permissions
 
-### 🛡️ Certifier
-- **Issue verified credits** to hydrogen producers
-- **Batch issuance** up to 1000 credits at once
-- **View issuance history** with transaction links
+| Role | Verify Users | Certify Production | Mint Credits | Trade Credits | View Audit |
+|------|--------------|-------------------|--------------|---------------|------------|
+| Country Admin | ✅ State Admins | ❌ | ❌ | ❌ | ✅ |
+| State Admin | ✅ City Admins | ❌ | ❌ | ❌ | ✅ |
+| City Admin | ✅ Producers/Buyers | ✅ Production | ❌ | ❌ | ✅ |
+| Producer | ❌ | ❌ | ✅ Own Credits | ✅ Sell | ✅ Own |
+| Buyer | ❌ | ❌ | ❌ | ✅ Buy/Retire | ✅ Own |
+| Auditor | ❌ | ❌ | ❌ | ❌ | ✅ All |
 
-### 🏭 Producer  
-- **Manage owned credits** with real-time status
-- **Transfer credits** to buyers or other parties
-- **View credit portfolio** (active vs. retired)
+## 🔄 Workflow
 
-### 👥 Buyer
-- **Purchase credits** from producers
-- **Retire credits** for carbon offset (permanent)
-- **Download retirement proofs** (JSON certificates)
+### 1. Production Request Flow
 
-### 📊 Regulator
-- **Monitor all transactions** with comprehensive audit trail
-- **Filter and search** events by type and address
-- **Export compliance reports** (blockchain explorer links)
+```mermaid
+graph LR
+    A[Producer] -->|Submit Request| B[City Admin]
+    B -->|Certify| C[Blockchain]
+    C -->|Mint Credits| D[Producer Wallet]
+```
 
-## 🛠️ Technology Stack
+1. **Producer** submits production request with:
+   - Production amount (kg)
+   - Facility details
+   - Production method & energy source
+   - Proof documents
+   
+2. **City Admin** verifies and certifies the production
+3. **Producer** mints H2 credits to their wallet
+4. **Credits** are available for trading
 
-- **Smart Contracts:** Solidity + Hardhat + OpenZeppelin
-- **Backend:** Node.js + Express + TypeScript
-- **Frontend:** React + Vite + Tailwind CSS + Framer Motion
-- **Blockchain:** Ethereum (ERC-721) + Ethers.js
-- **Styling:** Custom dark theme with teal accents
+### 2. Trading Flow
 
-## 📋 Smart Contract Features
+```mermaid
+graph LR
+    A[Producer] -->|List Credits| B[Marketplace]
+    B -->|Purchase| C[Buyer]
+    C -->|Retire Credits| D[Compliance]
+```
 
-- **ERC-721 Standard:** Each credit is a unique NFT
-- **Role-based Access:** Certifier and Admin roles
-- **Batch Operations:** Efficient credit issuance
-- **Retirement System:** Permanent credit retirement
-- **Event Logging:** Complete audit trail
-- **Pausable:** Emergency stop functionality
+1. **Producer** lists credits on marketplace
+2. **Buyer** purchases credits (payment in ETH/MATIC)
+3. **Buyer** can retire credits for compliance
+4. **All transactions** recorded on blockchain
 
-## 🔧 Development
+## 🛡️ Security Features
 
-### Available Scripts
+### Fraud Prevention
+
+- **Double Certification Prevention**: Database + blockchain hash verification
+- **Role-Based Access Control**: Strict hierarchy enforcement
+- **Signature Verification**: All sensitive operations require wallet signatures
+- **Audit Logging**: Complete activity trail with risk assessment
+- **Rate Limiting**: API protection against abuse
+
+### Smart Contract Security
+
+- **Role Verification**: On-chain role checks for all operations
+- **Reentrancy Protection**: Safe external calls
+- **Access Control**: OpenZeppelin's AccessControl implementation
+- **Pausable**: Emergency stop functionality
+- **Input Validation**: Comprehensive parameter checking
+
+## 🧪 Demo Wallets
+
+For hackathon testing, we provide 10 pre-configured demo wallets with different roles:
+
+| Role | Name | Address | Use Case |
+|------|------|---------|----------|
+| Country Admin | Alice Johnson | `0x7099...79C8` | Full system oversight |
+| State Admin | Bob Smith | `0x3C44...93BC` | Regional management |
+| City Admin | Carol Davis | `0x90F7...b906` | Production certification |
+| Producer | David Wilson | `0x15d3...6A65` | Small producer (1000 kg/day) |
+| Producer | Eva Martinez | `0x9965...A4dc` | Large producer (2500 kg/day) |
+| Producer | Frank Chen | `0x976E...0aa9` | Renewable producer (500 kg/day) |
+| Buyer | Grace Thompson | `0x14dC...9955` | Steel manufacturing |
+| Buyer | Henry Rodriguez | `0x2361...1E8f` | Transportation |
+| Buyer | Isabel Garcia | `0xa0Ee...9720` | Chemical industry |
+| Auditor | Jack Anderson | `0xBcd4...4096` | Independent auditor |
+
+**⚠️ Security Warning**: These are demo wallets for testing only. Never use these private keys on mainnet!
+
+See [demo-wallets.json](./demo-wallets.json) for complete details including private keys.
+
+## 📊 API Documentation
+
+### Authentication
+
+All protected endpoints require a JWT token in the Authorization header:
 
 ```bash
-# Root level
-npm run dev              # Start frontend + backend
-npm run chain:compile    # Compile smart contracts
-npm run chain:deploy     # Deploy to testnet
-npm run chain:test       # Run contract tests
-
-# Individual workspaces
-npm -w blockchain run test
-npm -w backend run dev
-npm -w frontend run dev
+Authorization: Bearer <your_jwt_token>
 ```
+
+### Key Endpoints
+
+#### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login with wallet signature
+- `GET /api/auth/me` - Get current user info
+
+#### Production
+- `POST /api/production/request` - Submit production request
+- `GET /api/production/requests` - Get production requests
+- `POST /api/production/certify/:requestId` - Certify production
+- `POST /api/production/mint/:requestId` - Mint credits
+
+#### Marketplace
+- `POST /api/marketplace/list` - Create marketplace listing
+- `GET /api/marketplace/listings` - Get marketplace listings
+- `POST /api/marketplace/purchase` - Purchase credits
+- `POST /api/marketplace/retire` - Retire credits
+
+#### Admin
+- `GET /api/admin/dashboard` - Admin dashboard data
+- `POST /api/admin/grant-role` - Grant role to user
+- `GET /api/admin/fraud-alerts` - Get fraud alerts
+
+#### Audit
+- `GET /api/audit/logs` - Get audit logs
+- `GET /api/audit/export` - Export audit data
+- `GET /api/audit/compliance-report` - Compliance report
+
+## 🔧 Configuration
 
 ### Environment Variables
 
-Create `.env` from `env.example`:
-
-```bash
-# Blockchain
-RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
-PRIVATE_KEY=your_wallet_private_key
-EXPLORER_API_KEY=your_etherscan_api_key
-
-# Backend  
-PORT=5055
-AES_KEY=your_32_character_encryption_key
-
-# Auto-populated after deployment
-CONTRACT_ADDRESS=0x...
+#### Backend (.env)
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/hydrocred
+JWT_SECRET=your_super_secret_jwt_key
+BLOCKCHAIN_RPC_URL=http://127.0.0.1:8545
+H2_TOKEN_CONTRACT_ADDRESS=0x...
+PRIVATE_KEY=0x...
 ```
 
-## 🌐 Demo Flow
+#### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_CHAIN_ID=1337
+VITE_RPC_URL=http://127.0.0.1:8545
+VITE_CONTRACT_ADDRESS=0x...
+```
 
-1. **Deploy Contract** → Sets deployer as admin and certifier
-2. **Connect MetaMask** → Switch to Sepolia testnet
-3. **Certifier Issues Credits** → Batch issue to producer address
-4. **Producer Transfers** → Send credits to buyer
-5. **Buyer Retires** → Permanently retire for carbon offset
-6. **Regulator Audits** → View complete transaction history
+#### Contracts (.env)
+```env
+PRIVATE_KEY=your_private_key_here
+POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com
+POLYGONSCAN_API_KEY=your_api_key_here
+```
 
-## 🔮 Future Enhancements
+## 🚀 Deployment
 
-- **IPFS Integration** for document storage
-- **Multi-sig Governance** for certifier management  
-- **Carbon Credit Marketplace** with pricing
-- **Mobile App** with QR code scanning
-- **Oracle Integration** for real-world data feeds
-- **Layer 2 Scaling** (Polygon, Arbitrum)
+### Local Development
 
-## 🐛 Troubleshooting
+```bash
+# Start all services
+npm run dev
 
-### Common Issues
+# Or start individually
+npm run backend:dev    # Backend on :5000
+npm run frontend:dev   # Frontend on :3000
+npx hardhat node       # Blockchain on :8545 (in contracts/)
+```
 
-**"Contract not deployed"**
-- Run `npm run chain:deploy` first
-- Check `.env` has correct `RPC_URL` and `PRIVATE_KEY`
+### Production Deployment
 
-**"MetaMask connection failed"**  
-- Install MetaMask extension
-- Switch to correct network (Sepolia)
-- Ensure wallet has testnet ETH
+1. **Smart Contracts**
+   ```bash
+   cd contracts
+   npm run deploy:testnet  # Deploy to Polygon Mumbai
+   ```
 
-**"Backend API errors"**
-- Check backend is running on port 5055
-- Verify `CONTRACT_ADDRESS` in environment
+2. **Backend**
+   ```bash
+   cd backend
+   npm run build
+   npm start
+   ```
 
-**"Transaction failed"**
-- Ensure sufficient testnet ETH for gas
-- Check wallet is connected to correct network
-- Verify you have required role permissions
+3. **Frontend**
+   ```bash
+   cd frontend
+   npm run build
+   # Deploy dist/ folder to your hosting service
+   ```
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+```
+
+## 🧪 Testing
+
+### Smart Contract Tests
+
+```bash
+cd contracts
+npx hardhat test
+```
+
+### API Tests
+
+```bash
+cd backend
+npm test
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+npm test
+```
+
+### Integration Testing
+
+1. Start all services: `npm run dev`
+2. Import demo wallets into MetaMask
+3. Follow the testing workflow in demo-wallets.json
+
+## 📈 Monitoring & Analytics
+
+### Health Checks
+
+- Backend: `GET /health`
+- System Status: `GET /api/admin/system-health`
+
+### Metrics
+
+- User registration and verification rates
+- Production request processing times
+- Marketplace transaction volumes
+- Credit retirement tracking
+- Fraud detection alerts
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow TypeScript best practices
+- Write comprehensive tests
+- Update documentation
+- Follow the existing code style
+- Ensure security best practices
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: [docs.hydrocred.com](https://docs.hydrocred.com)
+- **API Reference**: [api.hydrocred.com](https://api.hydrocred.com)
+- **Issues**: [GitHub Issues](https://github.com/your-org/hydrocred/issues)
+- **Discord**: [HydroCred Community](https://discord.gg/hydrocred)
+- **Email**: [support@hydrocred.com](mailto:support@hydrocred.com)
+
+## 🙏 Acknowledgments
+
+- OpenZeppelin for secure smart contract libraries
+- Hardhat for development framework
+- React and TypeScript communities
+- MongoDB and Node.js ecosystems
+- The green hydrogen industry pioneers
 
 ---
 
-**Built with ❤️ for a sustainable hydrogen future**
+**Built with ❤️ for a sustainable future**
+
+*HydroCred is committed to accelerating the adoption of green hydrogen through transparent, secure, and efficient credit trading.*
