@@ -1,8 +1,8 @@
 # HydroCred 🌊
 
-**Blockchain-powered Green Hydrogen Credit System**
+Blockchain-based Green Hydrogen Credit System (ERC-20 gasless-style H2 token)
 
-HydroCred is a decentralized application (DApp) for issuing, transferring, and retiring verified green hydrogen production credits on the blockchain. Built with immutable audit trails and role-based access control.
+HydroCred tracks, certifies, and trades green hydrogen credits as fungible tokens (1 H2 = 1 kg). Credits are minted only when a producer submits a request and a City Admin certifies it with an EIP-712 signature. Admins cannot mint to themselves directly.
 
 ![HydroCred Logo](logo/hydrocred.svg)
 
@@ -10,9 +10,9 @@ HydroCred is a decentralized application (DApp) for issuing, transferring, and r
 
 ### Prerequisites
 
-- **Node.js 18+** and **npm**
-- **MetaMask** browser extension
-- **Ethereum testnet** (Sepolia) or **Polygon Amoy** access
+- Node.js 18+
+- MetaMask
+- Polygon Amoy RPC (or any EVM testnet)
 
 ### Installation
 
@@ -33,6 +33,7 @@ HydroCred is a decentralized application (DApp) for issuing, transferring, and r
    ```bash
    npm run chain:compile
    npm run chain:deploy
+   npm run chain:export-abi
    ```
 
 4. **Start the application:**
@@ -48,7 +49,7 @@ HydroCred is a decentralized application (DApp) for issuing, transferring, and r
 
 ```
 HydroCred/
-├── blockchain/          # Smart contracts (Hardhat)
+├── contracts/          # Smart contracts (Hardhat)
 ├── backend/            # Express API server  
 ├── frontend/           # React + Vite app
 ├── logo/              # Brand assets
@@ -82,17 +83,16 @@ HydroCred/
 - **Smart Contracts:** Solidity + Hardhat + OpenZeppelin
 - **Backend:** Node.js + Express + TypeScript
 - **Frontend:** React + Vite + Tailwind CSS + Framer Motion
-- **Blockchain:** Ethereum (ERC-721) + Ethers.js
+- **Blockchain:** Polygon testnet (ERC-20 H2) + Ethers.js
 - **Styling:** Custom dark theme with teal accents
 
 ## 📋 Smart Contract Features
 
-- **ERC-721 Standard:** Each credit is a unique NFT
-- **Role-based Access:** Certifier and Admin roles
-- **Batch Operations:** Efficient credit issuance
-- **Retirement System:** Permanent credit retirement
-- **Event Logging:** Complete audit trail
-- **Pausable:** Emergency stop functionality
+- ERC-20 H2 token with producer-only claimMint using City Admin signature
+- RoleManager hierarchy: Country → State → City → Producer/Buyer/Auditor
+- Marketplace for listings and purchases (escrowed transfers)
+- Retire credits (burn) with reason for audit
+- Double-certification prevention (DB + on-chain hash)
 
 ## 🔧 Development
 
@@ -116,36 +116,42 @@ npm -w frontend run dev
 Create `.env` from `env.example`:
 
 ```bash
-# Blockchain
-RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
-PRIVATE_KEY=your_wallet_private_key
-EXPLORER_API_KEY=your_etherscan_api_key
+# Contracts / networks
+RPC_URL=https://rpc-amoy.polygon.technology
+PRIVATE_KEY=0x...
 
-# Backend  
+# Backend
 PORT=5055
-AES_KEY=your_32_character_encryption_key
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=hydrocred
+AES_KEY=32_characters_minimum_secret
+JWT_SECRET=dev_jwt_secret
 
-# Auto-populated after deployment
-CONTRACT_ADDRESS=0x...
+# Deployed addresses
+CONTRACT_ADDRESS=0x...           # HydroCredToken
+ROLE_MANAGER_ADDRESS=0x...
+MARKETPLACE_ADDRESS=0x...
+
+# Relayer (demo)
+RELAYER_PRIVATE_KEY=0x...
+CERTIFIER_PRIVATE_KEY=0x...
 ```
 
 ## 🌐 Demo Flow
 
-1. **Deploy Contract** → Sets deployer as admin and certifier
-2. **Connect MetaMask** → Switch to Sepolia testnet
-3. **Certifier Issues Credits** → Batch issue to producer address
-4. **Producer Transfers** → Send credits to buyer
-5. **Buyer Retires** → Permanently retire for carbon offset
-6. **Regulator Audits** → View complete transaction history
+1. Deploy contracts → Deployer is initial Country Admin
+2. City Admin certifies a producer request → signs EIP-712 message
+3. Producer calls claimMint(cert, sig) → H2 tokens minted
+4. Producer lists credits on Marketplace → escrow tokens
+5. Buyer purchases → receives H2, seller receives ETH
+6. Buyer retires credits → on-chain burn + audit log
 
 ## 🔮 Future Enhancements
 
-- **IPFS Integration** for document storage
-- **Multi-sig Governance** for certifier management  
-- **Carbon Credit Marketplace** with pricing
-- **Mobile App** with QR code scanning
-- **Oracle Integration** for real-world data feeds
-- **Layer 2 Scaling** (Polygon, Arbitrum)
+- IPFS for document storage
+- Multi-sig governance
+- Price oracles and off-chain data feeds
+- L2 scaling
 
 ## 🐛 Troubleshooting
 
@@ -155,9 +161,9 @@ CONTRACT_ADDRESS=0x...
 - Run `npm run chain:deploy` first
 - Check `.env` has correct `RPC_URL` and `PRIVATE_KEY`
 
-**"MetaMask connection failed"**  
-- Install MetaMask extension
-- Switch to correct network (Sepolia)
+"MetaMask connection failed"
+- Install MetaMask
+- Switch to Polygon Amoy
 - Ensure wallet has testnet ETH
 
 **"Backend API errors"**

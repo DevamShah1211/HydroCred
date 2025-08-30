@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import path from 'path';
 import { config, validateConfig } from './config/env';
 import apiRoutes from './routes/api';
+import { connectToDatabase } from './services/db';
 
 const app = express();
 
@@ -57,18 +58,26 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
-const PORT = config.port;
+const PORT = config.port as number | string;
 
-app.listen(PORT, () => {
-  console.log(`🚀 HydroCred Backend running on port ${PORT}`);
-  console.log(`📡 Environment: ${config.nodeEnv}`);
-  
-  const configValid = validateConfig();
-  if (configValid) {
-    console.log('✅ Configuration validated');
-  } else {
-    console.log('⚠️  Configuration incomplete - some features may not work');
+(async () => {
+  try {
+    await connectToDatabase();
+  } catch (e) {
+    console.warn('Database connection not established. Proceeding without DB.');
   }
-  
-  console.log(`🌐 API available at http://localhost:${PORT}`);
-});
+
+  app.listen(PORT, () => {
+    console.log(`🚀 HydroCred Backend running on port ${PORT}`);
+    console.log(`📡 Environment: ${config.nodeEnv}`);
+    
+    const configValid = validateConfig();
+    if (configValid) {
+      console.log('✅ Configuration validated');
+    } else {
+      console.log('⚠️  Configuration incomplete - some features may not work');
+    }
+    
+    console.log(`🌐 API available at http://localhost:${PORT}`);
+  });
+})();

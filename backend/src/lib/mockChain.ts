@@ -4,7 +4,7 @@ interface MockTransaction {
   hash: string;
   from: string;
   to: string;
-  type: 'issue' | 'transfer' | 'retire';
+  type: 'issued' | 'transferred' | 'retired';
   tokenId?: number;
   amount?: number;
   fromId?: number;
@@ -35,7 +35,7 @@ class MockBackendChain {
           hash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
           from: '0x1234567890123456789012345678901234567890',
           to: '0x2345678901234567890123456789012345678901',
-          type: 'issue',
+          type: 'issued',
           amount: 10,
           fromId: 1,
           toId: 10,
@@ -47,7 +47,7 @@ class MockBackendChain {
           hash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
           from: '0x2345678901234567890123456789012345678901',
           to: '0x3456789012345678901234567890123456789012',
-          type: 'transfer',
+          type: 'transferred',
           tokenId: 1,
           timestamp: Math.floor((Date.now() - 43200000) / 1000), // 12 hours ago
           blockNumber: 999995,
@@ -57,7 +57,7 @@ class MockBackendChain {
           hash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
           from: '0x3456789012345678901234567890123456789012',
           to: '0x3456789012345678901234567890123456789012',
-          type: 'retire',
+          type: 'retired',
           tokenId: 1,
           timestamp: Math.floor((Date.now() - 3600000) / 1000), // 1 hour ago
           blockNumber: 999998,
