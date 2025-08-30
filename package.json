@@ -1,27 +1,24 @@
 {
   "name": "hydrocred",
   "version": "1.0.0",
-  "private": true,
-  "description": "HydroCred - Blockchain-based Green Hydrogen Credit System",
-  "workspaces": [
-    "blockchain",
-    "backend",
-    "frontend"
-  ],
+  "description": "Blockchain-based Green Hydrogen Credit System",
+  "main": "index.js",
   "scripts": {
-    "install:all": "npm -w blockchain i && npm -w backend i && npm -w frontend i",
-    "dev": "concurrently -k \"npm -w backend run dev\" \"npm -w frontend run dev\"",
-    "demo": "npm -w frontend run dev",
-    "demo:full": "concurrently -k \"npm -w backend run dev\" \"npm -w frontend run dev\"",
-    "chain:compile": "npm -w blockchain run compile",
-    "chain:test": "npm -w blockchain run test",
-    "chain:deploy": "npm -w blockchain run deploy",
-    "update-contract-address": "node scripts/update-contract-address.js"
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd frontend && npm run dev",
+    "contracts:compile": "cd contracts && npx hardhat compile",
+    "contracts:deploy": "cd contracts && npx hardhat run scripts/deploy.js",
+    "contracts:deploy:testnet": "cd contracts && npx hardhat run scripts/deploy.js --network polygon_testnet",
+    "setup": "npm run setup:backend && npm run setup:frontend && npm run setup:contracts",
+    "setup:backend": "cd backend && npm install",
+    "setup:frontend": "cd frontend && npm install",
+    "setup:contracts": "cd contracts && npm install"
   },
+  "keywords": ["blockchain", "green-hydrogen", "credits", "erc20", "polygon"],
+  "author": "HydroCred Team",
+  "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
