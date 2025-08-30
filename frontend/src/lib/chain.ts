@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import HydroCredTokenABI from '../abi/HydroCredToken.json';
+import * as mockChain from './mockChain';
 
 declare global {
   interface Window {
@@ -10,11 +11,18 @@ declare global {
 export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '';
 export const RPC_URL = import.meta.env.VITE_RPC_URL || '';
 
+// Toggle between real and mock blockchain
+const USE_MOCK_CHAIN = import.meta.env.VITE_USE_MOCK_CHAIN !== 'false'; // Default to true for demo
+
 let provider: ethers.BrowserProvider | null = null;
 let signer: ethers.JsonRpcSigner | null = null;
 let contract: ethers.Contract | null = null;
 
 export async function getProvider(): Promise<ethers.BrowserProvider> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getProvider();
+  }
+  
   if (!provider) {
     if (!window.ethereum) {
       throw new Error('MetaMask not found. Please install MetaMask.');
@@ -25,6 +33,10 @@ export async function getProvider(): Promise<ethers.BrowserProvider> {
 }
 
 export async function getSigner(): Promise<ethers.JsonRpcSigner> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getSigner();
+  }
+  
   if (!signer) {
     const providerInstance = await getProvider();
     await providerInstance.send('eth_requestAccounts', []);
@@ -34,6 +46,10 @@ export async function getSigner(): Promise<ethers.JsonRpcSigner> {
 }
 
 export async function getContract(): Promise<ethers.Contract> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getContract();
+  }
+  
   if (!contract) {
     if (!CONTRACT_ADDRESS) {
       throw new Error('Contract address not configured. Please deploy the contract first.');
@@ -45,6 +61,10 @@ export async function getContract(): Promise<ethers.Contract> {
 }
 
 export async function getReadOnlyContract(): Promise<ethers.Contract> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getReadOnlyContract();
+  }
+  
   if (!CONTRACT_ADDRESS) {
     throw new Error('Contract address not configured. Please deploy the contract first.');
   }
@@ -53,6 +73,10 @@ export async function getReadOnlyContract(): Promise<ethers.Contract> {
 }
 
 export async function connectWallet(): Promise<string> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.connectWallet();
+  }
+  
   try {
     const signerInstance = await getSigner();
     return await signerInstance.getAddress();
@@ -63,6 +87,10 @@ export async function connectWallet(): Promise<string> {
 }
 
 export async function getWalletAddress(): Promise<string | null> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getWalletAddress();
+  }
+  
   try {
     const providerInstance = await getProvider();
     const accounts = await providerInstance.listAccounts();
@@ -73,42 +101,74 @@ export async function getWalletAddress(): Promise<string | null> {
 }
 
 export async function batchIssueCredits(to: string, amount: number): Promise<ethers.ContractTransactionResponse> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.batchIssueCredits(to, amount);
+  }
+  
   const contractInstance = await getContract();
   return await contractInstance.batchIssue(to, amount);
 }
 
 export async function transferCredit(from: string, to: string, tokenId: number): Promise<ethers.ContractTransactionResponse> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.transferCredit(from, to, tokenId);
+  }
+  
   const contractInstance = await getContract();
   return await contractInstance.transferFrom(from, to, tokenId);
 }
 
 export async function retireCredit(tokenId: number): Promise<ethers.ContractTransactionResponse> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.retireCredit(tokenId);
+  }
+  
   const contractInstance = await getContract();
   return await contractInstance.retire(tokenId);
 }
 
 export async function getOwnedTokens(address: string): Promise<number[]> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getOwnedTokens(address);
+  }
+  
   const contractInstance = await getReadOnlyContract();
   const tokens = await contractInstance.tokensOfOwner(address);
   return tokens.map((token: bigint) => Number(token));
 }
 
 export async function isTokenRetired(tokenId: number): Promise<boolean> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.isTokenRetired(tokenId);
+  }
+  
   const contractInstance = await getReadOnlyContract();
   return await contractInstance.isRetired(tokenId);
 }
 
 export async function getTokenOwner(tokenId: number): Promise<string> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.getTokenOwner(tokenId);
+  }
+  
   const contractInstance = await getReadOnlyContract();
   return await contractInstance.ownerOf(tokenId);
 }
 
 export async function hasRole(role: string, address: string): Promise<boolean> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.hasRole(role, address);
+  }
+  
   const contractInstance = await getReadOnlyContract();
   return await contractInstance.hasRole(role, address);
 }
 
 export async function isCertifier(address: string): Promise<boolean> {
+  if (USE_MOCK_CHAIN) {
+    return await mockChain.isCertifier(address);
+  }
+  
   const contractInstance = await getReadOnlyContract();
   const certifierRole = await contractInstance.CERTIFIER_ROLE();
   return await contractInstance.hasRole(certifierRole, address);
@@ -131,6 +191,10 @@ export class ChainError extends Error {
 }
 
 export function handleChainError(error: any): ChainError {
+  if (USE_MOCK_CHAIN) {
+    return mockChain.handleChainError(error);
+  }
+  
   if (error.code === 4001) {
     return new ChainError('Transaction rejected by user', 'USER_REJECTED');
   } else if (error.code === -32603) {
@@ -143,3 +207,7 @@ export function handleChainError(error: any): ChainError {
   
   return new ChainError(error.message || 'Unknown blockchain error', 'UNKNOWN');
 }
+
+// Export mock chain utilities for advanced usage
+export { mockChain };
+export { getAvailableWallets, switchWallet, resetDemoData, getDebugData } from './mockChain';

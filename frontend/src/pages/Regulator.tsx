@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, ExternalLink, RefreshCw, Filter, Search } from 'lucide-react';
 import { getLedgerData, CreditEvent } from '../lib/api';
-import { getExplorerUrl } from '../lib/chain';
+import { getExplorerUrl, getAvailableWallets } from '../lib/chain';
+import TransactionHistory from '../components/TransactionHistory';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import DemoBanner from '../components/DemoBanner';
 
 const Regulator: React.FC = () => {
   const [events, setEvents] = useState<CreditEvent[]>([]);
@@ -105,6 +107,8 @@ const Regulator: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
+          <DemoBanner />
+          
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">

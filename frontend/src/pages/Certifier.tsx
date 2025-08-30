@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Plus, ExternalLink } from 'lucide-react';
-import { batchIssueCredits, getWalletAddress, isCertifier, getExplorerUrl, handleChainError } from '../lib/chain';
+import { Shield, Plus, ExternalLink, Users } from 'lucide-react';
+import { batchIssueCredits, getWalletAddress, isCertifier, getExplorerUrl, handleChainError, getAvailableWallets } from '../lib/chain';
 import { getLedgerData, CreditEvent } from '../lib/api';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import DemoBanner from '../components/DemoBanner';
 
 const Certifier: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -142,6 +143,8 @@ const Certifier: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
+          <DemoBanner />
+          
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-2">
@@ -169,14 +172,33 @@ const Certifier: React.FC = () => {
                   <label className="block text-sm font-medium mb-2">
                     Producer Address
                   </label>
-                  <input
-                    type="text"
-                    value={recipientAddress}
-                    onChange={(e) => setRecipientAddress(e.target.value)}
-                    placeholder="0x..."
-                    className="input w-full"
-                    required
-                  />
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="input w-full"
+                      required
+                    />
+                    
+                    {/* Quick address selector for demo */}
+                    <div className="flex flex-wrap gap-2">
+                      {getAvailableWallets()
+                        .filter(w => w.name !== 'Certifier Wallet')
+                        .map((wallet) => (
+                        <button
+                          key={wallet.address}
+                          type="button"
+                          onClick={() => setRecipientAddress(wallet.address)}
+                          className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors"
+                          title={wallet.name}
+                        >
+                          {wallet.name.split(' ')[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div>
