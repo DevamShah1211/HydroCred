@@ -132,4 +132,97 @@ router.get('/token/:tokenId', async (req: Request, res: Response) => {
   }
 });
 
+// Get verified producers directory (public endpoint)
+router.get('/producers', async (req: Request, res: Response) => {
+  try {
+    const { getVerifiedProducers } = await import('../lib/chain');
+    const producers = await getVerifiedProducers();
+    
+    res.json({
+      success: true,
+      producers,
+      count: producers.length
+    });
+  } catch (error) {
+    console.error('Producers fetch error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch producers',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Submit credit request from buyer to producer
+router.post('/credit-requests', async (req: Request, res: Response) => {
+  try {
+    const requestSchema = z.object({
+      producerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+      buyerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+      requestedAmount: z.number().min(1).max(1000),
+      purpose: z.string().min(1),
+      deliveryDate: z.string(),
+      contactInfo: z.string().min(1),
+      message: z.string().optional()
+    });
+    
+    const requestData = requestSchema.parse(req.body);
+    
+    // In a real implementation, this would be stored in a database
+    // For now, we'll just log it and return success
+    console.log('📝 New credit request received:', {
+      ...requestData,
+      timestamp: new Date().toISOString(),
+      status: 'pending'
+    });
+    
+    res.json({
+      success: true,
+      message: 'Credit request submitted successfully',
+      requestId: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'pending'
+    });
+  } catch (error) {
+    console.error('Credit request error:', error);
+    res.status(400).json({ 
+      error: 'Invalid request data',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get credit requests for a producer
+router.get('/credit-requests/:producerAddress', async (req: Request, res: Response) => {
+  try {
+    const { producerAddress } = req.params;
+    
+    // In a real implementation, this would query a database
+    // For now, return sample data
+    const sampleRequests = [
+      {
+        id: 'req_1',
+        buyerAddress: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+        requestedAmount: 5,
+        purpose: 'steel-production',
+        deliveryDate: '2024-02-15',
+        contactInfo: 'steel@company.com',
+        message: 'Need credits for our Q1 steel production',
+        status: 'pending',
+        timestamp: new Date().toISOString()
+      }
+    ];
+    
+    res.json({
+      success: true,
+      requests: sampleRequests,
+      count: sampleRequests.length
+    });
+  } catch (error) {
+    console.error('Credit requests fetch error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch credit requests',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

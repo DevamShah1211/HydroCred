@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Trash2, Download, RefreshCw } from 'lucide-react';
-import { getWalletAddress, getOwnedTokens, retireCredit, isTokenRetired, handleChainError } from '../lib/chain';
+import { Users, Trash2, Download, RefreshCw, Search, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  getWalletAddress, 
+  getOwnedTokens, 
+  retireCredit, 
+  isTokenRetired, 
+  handleChainError, 
+  waitForTransactionAndRefresh, 
+  listenForTransfers,
+  isVerifiedProducer,
+  getProducerInfo
+} from '../lib/chain';
 import { toast } from '../components/Toast';
 import LoadingSpinner from '../components/LoadingSpinner';
-import DemoBanner from '../components/DemoBanner';
 
 interface CreditToken {
   tokenId: number;
@@ -17,12 +26,29 @@ const Buyer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRetiring, setIsRetiring] = useState<number | null>(null);
   
+  // New state for producer verification
+  const [producerAddress, setProducerAddress] = useState('');
+  const [producerInfo, setProducerInfo] = useState<{ state: string; city: string; isVerified: boolean } | null>(null);
+  const [isCheckingProducer, setIsCheckingProducer] = useState(false);
+  
   // Retirement confirmation state
   const [confirmRetirement, setConfirmRetirement] = useState<number | null>(null);
 
   useEffect(() => {
     loadWalletAndCredits();
-  }, []);
+    
+    // Set up transfer event listener
+    const setupTransferListener = async () => {
+      await listenForTransfers((_from, _to, _tokenId) => {
+        console.log('🔄 Transfer detected, refreshing credits...');
+        if (walletAddress) {
+          loadCredits(walletAddress);
+        }
+      });
+    };
+    
+    setupTransferListener();
+  }, [walletAddress]);
 
   const loadWalletAndCredits = async () => {
     try {
@@ -42,7 +68,9 @@ const Buyer: React.FC = () => {
 
   const loadCredits = async (address: string) => {
     try {
+      console.log('🔄 Loading credits for address:', address);
       const tokenIds = await getOwnedTokens(address);
+      console.log('📋 Found token IDs:', tokenIds);
       
       const creditsWithStatus = await Promise.all(
         tokenIds.map(async (tokenId) => ({
@@ -51,10 +79,51 @@ const Buyer: React.FC = () => {
         }))
       );
       
+      console.log('✅ Credits loaded:', creditsWithStatus);
       setCredits(creditsWithStatus);
     } catch (error) {
       console.error('Failed to load credits:', error);
       toast.error('Failed to load your credits');
+    }
+  };
+
+  const handleCheckProducer = async () => {
+    if (!producerAddress) {
+      toast.error('Please enter a producer address');
+      return;
+    }
+
+    if (!producerAddress.startsWith('0x') || producerAddress.length !== 42) {
+      toast.error('Please enter a valid Ethereum address');
+      return;
+    }
+
+    setIsCheckingProducer(true);
+    
+    try {
+      const [isVerified, info] = await Promise.all([
+        isVerifiedProducer(producerAddress),
+        getProducerInfo(producerAddress)
+      ]);
+      
+      setProducerInfo({
+        state: info.state,
+        city: info.city,
+        isVerified
+      });
+      
+      if (isVerified) {
+        toast.success('Producer verified! This producer can sell legitimate tokens.');
+      } else {
+        toast.info('Producer not verified. Be cautious when purchasing tokens.');
+      }
+      
+    } catch (error) {
+      console.error('Failed to check producer:', error);
+      toast.error('Failed to verify producer');
+      setProducerInfo(null);
+    } finally {
+      setIsCheckingProducer(false);
     }
   };
 
@@ -66,17 +135,15 @@ const Buyer: React.FC = () => {
       
       toast.info('Retirement submitted. Waiting for confirmation...');
       
-      const receipt = await tx.wait();
-      
-      if (receipt && receipt.status === 1) {
-        toast.success(`Credit #${tokenId} retired successfully`);
-        setConfirmRetirement(null);
+      await waitForTransactionAndRefresh(tx, () => {
         if (walletAddress) {
-          await loadCredits(walletAddress);
+          loadCredits(walletAddress);
         }
-      } else {
-        toast.error('Retirement failed');
-      }
+      });
+      
+      toast.success(`Credit #${tokenId} retired successfully`);
+      setConfirmRetirement(null);
+      
     } catch (error) {
       const chainError = handleChainError(error);
       toast.error(chainError.message);
@@ -116,6 +183,11 @@ const Buyer: React.FC = () => {
     }
   };
 
+  const clearProducerCheck = () => {
+    setProducerAddress('');
+    setProducerInfo(null);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -151,8 +223,6 @@ const Buyer: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <DemoBanner />
-          
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
@@ -169,6 +239,88 @@ const Buyer: React.FC = () => {
               </button>
             </div>
             <p className="text-gray-400">Purchase and retire credits for carbon offset</p>
+          </div>
+
+          {/* Producer Verification */}
+          <div className="mb-8">
+            <div className="card">
+              <h2 className="text-xl font-semibold mb-6 flex items-center">
+                <Search className="h-5 w-5 mr-2 text-brand" />
+                Verify Producer
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Producer Address
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={producerAddress}
+                      onChange={(e) => setProducerAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="input flex-1"
+                    />
+                    <button
+                      onClick={handleCheckProducer}
+                      disabled={isCheckingProducer}
+                      className="btn-primary px-4"
+                    >
+                      {isCheckingProducer ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Verify a producer before purchasing tokens
+                  </p>
+                </div>
+
+                {producerInfo && (
+                  <div className="p-4 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">Producer Status</h3>
+                      <button
+                        onClick={clearProducerCheck}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        {producerInfo.isVerified ? (
+                          <CheckCircle className="h-4 w-4 text-green-400" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-red-400" />
+                        )}
+                        <span className={`text-sm font-medium ${
+                          producerInfo.isVerified ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {producerInfo.isVerified ? 'Verified Producer' : 'Not Verified'}
+                        </span>
+                      </div>
+                      
+                      {producerInfo.state && (
+                        <p className="text-sm text-gray-300">
+                          State: <span className="text-white">{producerInfo.state}</span>
+                        </p>
+                      )}
+                      
+                      {producerInfo.city && (
+                        <p className="text-sm text-gray-300">
+                          City: <span className="text-white">{producerInfo.city}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Stats */}
@@ -218,7 +370,7 @@ const Buyer: React.FC = () => {
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {activeCredits.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
-                    No active credits. Purchase credits from producers to get started.
+                    No active credits. Purchase credits from verified producers to get started.
                   </p>
                 ) : (
                   activeCredits.map((credit) => (
@@ -300,6 +452,73 @@ const Buyer: React.FC = () => {
                 )}
               </div>
             </motion.div>
+          </div>
+
+          {/* Information Panel */}
+          <div className="mt-8">
+            <div className="card">
+              <h2 className="text-xl font-semibold mb-4">Buyer Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                  <h3 className="font-semibold text-blue-400 mb-2">Producer Verification</h3>
+                  <p className="text-sm text-gray-300">
+                    Always verify producers before purchasing tokens. Verified producers have been 
+                    approved by State Admins and can sell legitimate green hydrogen credits.
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-green-900/20 border border-green-700/50 rounded-lg">
+                  <h3 className="font-semibold text-green-400 mb-2">Credit Retirement</h3>
+                  <p className="text-sm text-gray-300">
+                    Retire credits to offset your carbon footprint. Retired credits are permanently 
+                    removed from circulation and provide proof of environmental action.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Marketplace Discovery */}
+          <div className="mt-8">
+            <div className="card">
+              <h2 className="text-xl font-semibold mb-6 flex items-center">
+                <Search className="h-5 w-5 mr-2 text-brand" />
+                Discover Available Credits
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-yellow-400 mb-2">How to Buy Credits</h3>
+                      <p className="text-sm text-gray-300 mb-3">
+                        To purchase green hydrogen credits, you need to:
+                      </p>
+                      <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                        <li>Connect with verified producers directly</li>
+                        <li>Negotiate the price and terms</li>
+                        <li>Provide your wallet address to the producer</li>
+                        <li>Producer will transfer the credit to your wallet</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <CheckCircle className="h-5 w-5 text-blue-400 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-blue-400 mb-2">Finding Producers</h3>
+                      <p className="text-sm text-gray-300">
+                        Look for verified producers in your region. You can use the producer verification 
+                        tool above to check if an address belongs to a verified producer before making a purchase.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Retirement Confirmation Modal */}

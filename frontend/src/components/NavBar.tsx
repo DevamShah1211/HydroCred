@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, RotateCcw } from 'lucide-react';
-import { getWalletAddress, resetDemoData } from '../lib/chain';
-import WalletSelector from './WalletSelector';
-import DemoConfig from './DemoConfig';
-import { toast } from './Toast';
+import { Wallet, Menu, X } from 'lucide-react';
+import { connectWallet, getWalletAddress } from '../lib/chain';
 
 const NavBar: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -25,16 +22,17 @@ const NavBar: React.FC = () => {
     }
   };
 
-  const handleWalletChange = (address: string, walletName: string) => {
-    setWalletAddress(address);
-    // Refresh the current page to update data
-    window.location.reload();
-  };
-
-  const handleResetDemo = () => {
-    resetDemoData();
-    toast.success('Demo data reset successfully');
-    window.location.reload();
+  const handleConnectWallet = async () => {
+    setIsConnecting(true);
+    try {
+      const address = await connectWallet();
+      setWalletAddress(address);
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+      alert('Failed to connect wallet. Please make sure MetaMask is installed.');
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const formatAddress = (address: string) => {
@@ -43,7 +41,8 @@ const NavBar: React.FC = () => {
 
   const navItems = [
     { path: '/', label: 'Home' },
-    { path: '/certifier', label: 'Certifier' },
+    { path: '/main-admin', label: 'Main Admin' },
+    { path: '/state-admin', label: 'State Admin' },
     { path: '/producer', label: 'Producer' },
     { path: '/buyer', label: 'Buyer' },
     { path: '/regulator', label: 'Regulator' },
@@ -76,13 +75,23 @@ const NavBar: React.FC = () => {
             ))}
           </div>
 
-          {/* Wallet Connection & Demo Controls */}
+          {/* Wallet Connection */}
           <div className="flex items-center space-x-4">
-            <div className="hidden md:block">
-              <DemoConfig />
-            </div>
-            
-            <WalletSelector onWalletChange={handleWalletChange} />
+            {walletAddress ? (
+              <div className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-xl">
+                <Wallet className="h-4 w-4 text-brand" />
+                <span className="text-sm font-mono">{formatAddress(walletAddress)}</span>
+              </div>
+            ) : (
+              <button
+                onClick={handleConnectWallet}
+                disabled={isConnecting}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <Wallet className="h-4 w-4" />
+                <span>{isConnecting ? 'Connecting...' : 'Connect Wallet'}</span>
+              </button>
+            )}
 
             {/* Mobile menu button */}
             <button
@@ -112,17 +121,6 @@ const NavBar: React.FC = () => {
                   {item.label}
                 </Link>
               ))}
-              
-              <button
-                onClick={() => {
-                  handleResetDemo();
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors text-sm mt-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span>Reset Demo</span>
-              </button>
             </div>
           </div>
         )}

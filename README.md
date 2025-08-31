@@ -1,178 +1,239 @@
-# HydroCred 🌊
+# HydroCred - Hierarchical Green Hydrogen Credit System
 
-**Blockchain-powered Green Hydrogen Credit System**
+HydroCred is a blockchain-powered green hydrogen credit system with a hierarchical, state-aware approval workflow. The system enforces a structured hierarchy where Main Admins assign State Admins, who then approve producers within their assigned states.
 
-HydroCred is a decentralized application (DApp) for issuing, transferring, and retiring verified green hydrogen production credits on the blockchain. Built with immutable audit trails and role-based access control.
+## 🏗️ System Architecture
 
-![HydroCred Logo](logo/hydrocred.svg)
+### Roles and Hierarchy
 
-## 🚀 Quick Start
+1. **Main Admin (India-level)**
+   - Only one wallet address (set during contract deployment)
+   - Can assign State Admins for each state
+   - Cannot approve producers or buyers directly
+   - Has full system control and can pause/unpause the contract
+
+2. **State Admin (State-level)**
+   - Assigned by Main Admin for specific states
+   - Can approve producers in their assigned state only
+   - Cannot create other admins
+   - Cannot approve users outside their assigned state
+
+3. **Producer**
+   - Must register state and city after connecting wallet
+   - Cannot request tokens until state & city are submitted
+   - Requests tokens from State Admin of their registered state
+   - Only approved producers can receive tokens and sell to buyers
+
+4. **Buyer**
+   - Can receive tokens from verified producers
+   - Can verify producer legitimacy using `isVerifiedProducer`
+   - Can retire credits for carbon offset
+   - Cannot approve anyone
+
+## 🔄 Workflow
+
+1. **Producer Registration**
+   - Producer connects wallet via MetaMask
+   - System requires state & city selection
+   - Producer submits registration → wallet + state + city saved on-chain
+
+2. **Token Request Process**
+   - Producer requests tokens → automatically routed to State Admin of their state
+   - State Admin reviews and approves/rejects requests
+   - Upon approval, tokens are minted and producer becomes verified
+
+3. **Token Trading**
+   - Verified producers can sell tokens to buyers
+   - Buyers can verify producer legitimacy before purchase
+   - All transfers are recorded on-chain with events
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- **Node.js 18+** and **npm**
-- **MetaMask** browser extension
-- **Ethereum testnet** (Sepolia) or **Polygon Amoy** access
+- Node.js 18+ and npm
+- MetaMask wallet extension
+- Access to Ethereum Sepolia testnet
 
 ### Installation
 
-1. **Clone and install dependencies:**
+1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd HydroCred
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # Install blockchain dependencies
+   cd blockchain
+   npm install
+   
+   # Install frontend dependencies
+   cd ../frontend
    npm install
    ```
 
-2. **Configure environment:**
+3. **Deploy the smart contract**
    ```bash
-   cp env.example .env
-   # Edit .env with your RPC URL and private key
+   cd ../blockchain
+   npm run deploy
    ```
 
-3. **Compile and deploy contracts:**
+4. **Assign State Admins**
    ```bash
-   npm run chain:compile
-   npm run chain:deploy
+   npm run assign-admin
    ```
 
-4. **Start the application:**
+5. **Start the frontend**
    ```bash
+   cd ../frontend
    npm run dev
    ```
 
-5. **Access the app:**
-   - **Frontend:** http://localhost:5173
-   - **Backend API:** http://localhost:5055
+## 📋 Smart Contract Functions
 
-## 🏗️ Architecture
+### Main Admin Functions
+- `assignStateAdmin(address _admin, string _state)` - Assign state admin
+- `updateMainAdmin(address _newAdmin)` - Transfer main admin role
+- `pause()` / `unpause()` - Control contract state
 
-```
-HydroCred/
-├── blockchain/          # Smart contracts (Hardhat)
-├── backend/            # Express API server  
-├── frontend/           # React + Vite app
-├── logo/              # Brand assets
-└── scripts/           # Automation scripts
-```
+### State Admin Functions
+- `approveRequest(uint256 _requestId)` - Approve producer token request
 
-## 🔐 Roles & Permissions
+### Producer Functions
+- `registerProducer(string _state, string _city)` - Register state and city
+- `requestTokens(uint256 _amount)` - Request tokens from state admin
 
-### 🛡️ Certifier
-- **Issue verified credits** to hydrogen producers
-- **Batch issuance** up to 1000 credits at once
-- **View issuance history** with transaction links
+### View Functions
+- `isVerifiedProducer(address _producer)` - Check if producer is verified
+- `getProducerInfo(address _producer)` - Get producer's state and city
+- `getPendingRequestsForState(string _state)` - Get pending requests for a state
+- `getRequestDetails(uint256 _requestId)` - Get request details
 
-### 🏭 Producer  
-- **Manage owned credits** with real-time status
-- **Transfer credits** to buyers or other parties
-- **View credit portfolio** (active vs. retired)
+## 🎯 Frontend Features
 
-### 👥 Buyer
-- **Purchase credits** from producers
-- **Retire credits** for carbon offset (permanent)
-- **Download retirement proofs** (JSON certificates)
+### Main Admin Dashboard
+- Assign State Admins for different states
+- System configuration and monitoring
+- Access control management
 
-### 📊 Regulator
-- **Monitor all transactions** with comprehensive audit trail
-- **Filter and search** events by type and address
-- **Export compliance reports** (blockchain explorer links)
+### State Admin Dashboard
+- View pending token requests for assigned states
+- Approve/reject producer requests
+- State-specific request management
 
-## 🛠️ Technology Stack
+### Producer Dashboard
+- State and city registration form
+- Token request submission
+- Request status tracking
+- Token management and transfer
 
-- **Smart Contracts:** Solidity + Hardhat + OpenZeppelin
-- **Backend:** Node.js + Express + TypeScript
-- **Frontend:** React + Vite + Tailwind CSS + Framer Motion
-- **Blockchain:** Ethereum (ERC-721) + Ethers.js
-- **Styling:** Custom dark theme with teal accents
+### Buyer Dashboard
+- Producer verification tool
+- Credit purchase and retirement
+- Retirement proof generation
 
-## 📋 Smart Contract Features
-
-- **ERC-721 Standard:** Each credit is a unique NFT
-- **Role-based Access:** Certifier and Admin roles
-- **Batch Operations:** Efficient credit issuance
-- **Retirement System:** Permanent credit retirement
-- **Event Logging:** Complete audit trail
-- **Pausable:** Emergency stop functionality
-
-## 🔧 Development
-
-### Available Scripts
-
-```bash
-# Root level
-npm run dev              # Start frontend + backend
-npm run chain:compile    # Compile smart contracts
-npm run chain:deploy     # Deploy to testnet
-npm run chain:test       # Run contract tests
-
-# Individual workspaces
-npm -w blockchain run test
-npm -w backend run dev
-npm -w frontend run dev
-```
+## 🔧 Configuration
 
 ### Environment Variables
 
-Create `.env` from `env.example`:
+Create `.env` files in both `blockchain/` and `frontend/` directories:
 
-```bash
-# Blockchain
-RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
-PRIVATE_KEY=your_wallet_private_key
-EXPLORER_API_KEY=your_etherscan_api_key
-
-# Backend  
-PORT=5055
-AES_KEY=your_32_character_encryption_key
-
-# Auto-populated after deployment
-CONTRACT_ADDRESS=0x...
+**Blockchain (.env)**
+```env
+PRIVATE_KEY=your_private_key_here
+SEPOLIA_RPC_URL=your_sepolia_rpc_url
+ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
 
-## 🌐 Demo Flow
+**Frontend (.env)**
+```env
+VITE_CONTRACT_ADDRESS=deployed_contract_address
+VITE_RPC_URL=your_sepolia_rpc_url
+```
 
-1. **Deploy Contract** → Sets deployer as admin and certifier
-2. **Connect MetaMask** → Switch to Sepolia testnet
-3. **Certifier Issues Credits** → Batch issue to producer address
-4. **Producer Transfers** → Send credits to buyer
-5. **Buyer Retires** → Permanently retire for carbon offset
-6. **Regulator Audits** → View complete transaction history
+### Network Configuration
 
-## 🔮 Future Enhancements
+The system is configured for Ethereum Sepolia testnet by default. Update `hardhat.config.ts` for other networks.
 
-- **IPFS Integration** for document storage
-- **Multi-sig Governance** for certifier management  
-- **Carbon Credit Marketplace** with pricing
-- **Mobile App** with QR code scanning
-- **Oracle Integration** for real-world data feeds
-- **Layer 2 Scaling** (Polygon, Arbitrum)
+## 📊 Events and Monitoring
 
-## 🐛 Troubleshooting
+The smart contract emits events for all key actions:
+- `StateAdminAssigned` - When a state admin is assigned
+- `ProducerRegistered` - When a producer registers
+- `TokenRequested` - When tokens are requested
+- `RequestApproved` - When a request is approved
+- `TokensIssued` - When tokens are minted
+- `TokenSold` - When tokens are transferred
+- `CreditRetired` - When credits are retired
 
-### Common Issues
+## 🧪 Testing
 
-**"Contract not deployed"**
-- Run `npm run chain:deploy` first
-- Check `.env` has correct `RPC_URL` and `PRIVATE_KEY`
+### Smart Contract Tests
+```bash
+cd blockchain
+npm test
+```
 
-**"MetaMask connection failed"**  
-- Install MetaMask extension
-- Switch to correct network (Sepolia)
-- Ensure wallet has testnet ETH
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
 
-**"Backend API errors"**
-- Check backend is running on port 5055
-- Verify `CONTRACT_ADDRESS` in environment
+## 🚨 Security Features
 
-**"Transaction failed"**
-- Ensure sufficient testnet ETH for gas
-- Check wallet is connected to correct network
-- Verify you have required role permissions
+- **Access Control**: OpenZeppelin AccessControl for role management
+- **State Isolation**: State Admins can only manage their assigned states
+- **Input Validation**: Comprehensive parameter validation
+- **Pausable**: Emergency pause functionality for Main Admin
+- **Event Logging**: Complete audit trail for all operations
+
+## 🔄 State Management
+
+The system maintains several key mappings:
+- `walletAddress → state` - Producer state registration
+- `walletAddress → city` - Producer city registration
+- `state → stateAdmin` - State admin assignments
+- `verifiedProducers` - Approved producer addresses
+- `tokenRequests` - All token request records
+
+## 📈 Future Enhancements
+
+- Multi-token support for different credit types
+- Advanced analytics and reporting
+- Mobile application
+- Integration with external verification systems
+- Automated compliance checking
+- Cross-chain interoperability
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Check the troubleshooting guide in `TROUBLESHOOTING.md`
+- Review the deployment guide in `DEPLOYMENT_GUIDE.md`
+
+## 🔗 Links
+
+- **Smart Contract**: `blockchain/contracts/HydroCredToken.sol`
+- **Frontend**: `frontend/src/`
+- **Deployment Scripts**: `blockchain/scripts/`
+- **Configuration**: `blockchain/hardhat.config.ts`
 
 ---
 
-**Built with ❤️ for a sustainable hydrogen future**
+**Note**: This system is designed for production use with proper security considerations. Always test thoroughly on testnets before deploying to mainnet.

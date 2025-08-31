@@ -5,15 +5,15 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
 export const config = {
-  port: process.env.PORT || 5055,
-  rpcUrl: process.env.RPC_URL || '',
-  contractAddress: process.env.CONTRACT_ADDRESS || '',
-  aesKey: process.env.AES_KEY || 'default_key_change_me_32_chars_min',
+  port: process.env.PORT || 5056,
+  rpcUrl: process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com',
+  contractAddress: process.env.CONTRACT_ADDRESS || '0xD21032F5988841970eE3bcE8d9E6e5C4eE902Dff',
+  aesKey: process.env.AES_KEY || 'hydrocred_encryption_key_32_chars_min',
   nodeEnv: process.env.NODE_ENV || 'development',
 };
 
 export function validateConfig() {
-  const required = ['RPC_URL', 'CONTRACT_ADDRESS'];
+  const required = ['CONTRACT_ADDRESS'];
   const missing = required.filter(key => !process.env[key]);
   
   if (missing.length > 0) {

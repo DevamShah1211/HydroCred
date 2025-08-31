@@ -1,22 +1,31 @@
 import { ethers } from 'ethers';
 import { config } from '../config/env';
 import HydroCredTokenABI from '../abi/HydroCredToken.json';
-import { getCreditEvents as getMockCreditEvents } from './mockChain';
 
 let provider: ethers.JsonRpcProvider | null = null;
 let contract: ethers.Contract | null = null;
 
-export function getProvider() {
+export async function getProvider() {
   if (!provider && config.rpcUrl) {
-    provider = new ethers.JsonRpcProvider(config.rpcUrl);
+    console.log('🔗 Connecting to RPC:', config.rpcUrl);
+    try {
+      provider = new ethers.JsonRpcProvider(config.rpcUrl);
+      // Test the connection
+      await provider.getBlockNumber();
+      console.log('✅ Backend RPC connection successful');
+    } catch (error: any) {
+      console.error('❌ Backend RPC connection failed:', error.message);
+      throw new Error(`Failed to connect to blockchain: ${error.message}`);
+    }
   }
   return provider;
 }
 
-export function getContract() {
+export async function getContract() {
   if (!contract && config.contractAddress) {
-    const providerInstance = getProvider();
+    const providerInstance = await getProvider();
     if (providerInstance) {
+      console.log('📋 Creating contract instance for:', config.contractAddress);
       contract = new ethers.Contract(
         config.contractAddress,
         HydroCredTokenABI,
@@ -41,14 +50,14 @@ export interface CreditEvent {
 }
 
 export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEvent[]> {
-  // Check if we should use mock data
-  const useMockChain = process.env.USE_MOCK_CHAIN !== 'false';
-  
-  if (useMockChain) {
-    return await getMockCreditEvents(fromBlock);
+  // If no fromBlock specified, start from a recent block to avoid "exceed maximum block range" error
+  if (fromBlock === 0) {
+    const provider = await getProvider();
+    const latestBlock = await provider.getBlockNumber();
+    fromBlock = Math.max(0, latestBlock - 10000); // Query last 10,000 blocks
+    console.log('🔍 Adjusted fromBlock to:', fromBlock, 'to avoid block range error');
   }
-  
-  const contractInstance = getContract();
+  const contractInstance = await getContract();
   if (!contractInstance) {
     throw new Error('Contract not initialized');
   }
@@ -56,9 +65,13 @@ export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEven
   const events: CreditEvent[] = [];
 
   try {
-    // Get CreditsIssued events
-    const issuedFilter = contractInstance.filters.CreditsIssued();
+    console.log('🔍 Fetching credit events from block:', fromBlock);
+    
+    // Get TokensIssued events
+    console.log('📋 Fetching TokensIssued events...');
+    const issuedFilter = contractInstance.filters.TokensIssued();
     const issuedEvents = await contractInstance.queryFilter(issuedFilter, fromBlock);
+    console.log('✅ Found', issuedEvents.length, 'TokensIssued events');
     
     for (const event of issuedEvents) {
       if ('args' in event && event.args) {
@@ -76,12 +89,14 @@ export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEven
       }
     }
 
-    // Get Transfer events (excluding mints)
-    const transferFilter = contractInstance.filters.Transfer();
-    const transferEvents = await contractInstance.queryFilter(transferFilter, fromBlock);
+    // Get TokenSold events (for sales/transfers)
+    console.log('📋 Fetching TokenSold events...');
+    const soldFilter = contractInstance.filters.TokenSold();
+    const soldEvents = await contractInstance.queryFilter(soldFilter, fromBlock);
+    console.log('✅ Found', soldEvents.length, 'TokenSold events');
     
-    for (const event of transferEvents) {
-      if ('args' in event && event.args && event.args[0] !== ethers.ZeroAddress) { // Exclude mints
+    for (const event of soldEvents) {
+      if ('args' in event && event.args) {
         const block = await event.getBlock();
         events.push({
           type: 'transferred',
@@ -96,8 +111,10 @@ export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEven
     }
 
     // Get CreditRetired events
+    console.log('📋 Fetching CreditRetired events...');
     const retiredFilter = contractInstance.filters.CreditRetired();
     const retiredEvents = await contractInstance.queryFilter(retiredFilter, fromBlock);
+    console.log('✅ Found', retiredEvents.length, 'CreditRetired events');
     
     for (const event of retiredEvents) {
       if ('args' in event && event.args) {
@@ -121,15 +138,16 @@ export async function getCreditEvents(fromBlock: number = 0): Promise<CreditEven
       return a.timestamp - b.timestamp;
     });
 
+    console.log('🎉 Total events found:', events.length);
     return events;
   } catch (error) {
-    console.error('Error fetching credit events:', error);
+    console.error('❌ Error fetching credit events:', error);
     throw error;
   }
 }
 
 export async function getTokenOwner(tokenId: number): Promise<string> {
-  const contractInstance = getContract();
+  const contractInstance = await getContract();
   if (!contractInstance) {
     throw new Error('Contract not initialized');
   }
@@ -142,10 +160,46 @@ export async function getTokenOwner(tokenId: number): Promise<string> {
 }
 
 export async function isTokenRetired(tokenId: number): Promise<boolean> {
-  const contractInstance = getContract();
+  const contractInstance = await getContract();
   if (!contractInstance) {
     throw new Error('Contract not initialized');
   }
   
   return await contractInstance.isRetired(tokenId);
+}
+
+export async function getVerifiedProducers(): Promise<Array<{
+  address: string;
+  state: string;
+  city: string;
+  isVerified: boolean;
+}>> {
+  try {
+    const contractInstance = await getContract();
+    if (!contractInstance) {
+      throw new Error('Contract not initialized');
+    }
+
+    // For now, return a sample list of verified producers
+    // In a real implementation, you'd query the blockchain for all producers
+    const sampleProducers = [
+      {
+        address: '0x34a0eF8AC40f455C76cE7332844a55442F6e71c9',
+        state: 'Maharashtra',
+        city: 'Mumbai',
+        isVerified: true
+      },
+      {
+        address: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+        state: 'Karnataka',
+        city: 'Bangalore',
+        isVerified: true
+      }
+    ];
+
+    return sampleProducers;
+  } catch (error) {
+    console.error('Error fetching verified producers:', error);
+    return [];
+  }
 }

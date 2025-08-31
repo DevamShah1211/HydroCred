@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
-import { initializeDemoMode, showDemoWelcome } from './lib/demoSetup'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,11 +13,6 @@ const queryClient = new QueryClient({
     },
   },
 })
-
-// Initialize demo mode
-initializeDemoMode().then(() => {
-  showDemoWelcome();
-});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

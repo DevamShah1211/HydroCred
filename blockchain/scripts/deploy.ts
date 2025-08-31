@@ -9,7 +9,7 @@ async function main() {
   console.log("Deploying with account:", deployer.address);
   console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)));
 
-  // Deploy the contract
+  // Deploy the contract with deployer as main admin
   const HydroCredToken = await ethers.getContractFactory("HydroCredToken");
   const hydroCredToken = await HydroCredToken.deploy(deployer.address);
   
@@ -17,17 +17,20 @@ async function main() {
   const contractAddress = await hydroCredToken.getAddress();
   
   console.log("✅ HydroCredToken deployed to:", contractAddress);
-  console.log("🔑 Default admin and certifier:", deployer.address);
+  console.log("🔑 Main Admin:", deployer.address);
+  console.log("🔑 State Admin role granted to:", deployer.address);
   
   // Save contract address to file
+  const net = await ethers.provider.getNetwork();
   const contractInfo = {
     address: contractAddress,
-    network: (await ethers.provider.getNetwork()).name,
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    network: net.name,
+    chainId: net.chainId.toString(),
     deployer: deployer.address,
+    mainAdmin: deployer.address,
     deployedAt: new Date().toISOString()
   };
-  
+
   fs.writeFileSync(
     path.join(__dirname, "../contract-address.json"),
     JSON.stringify(contractInfo, null, 2)
@@ -39,7 +42,9 @@ async function main() {
   try {
     const name = await hydroCredToken.name();
     const symbol = await hydroCredToken.symbol();
+    const mainAdmin = await hydroCredToken.mainAdmin();
     console.log(`📋 Contract verified: ${name} (${symbol})`);
+    console.log(`👑 Main Admin: ${mainAdmin}`);
   } catch (error) {
     console.error("❌ Contract verification failed:", error);
   }
